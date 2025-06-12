@@ -1,0 +1,682 @@
+/* ========= RESET Y ESTILOS BASE ========= */
+/* Reset básico para eliminar márgenes/padding predeterminados */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    /* Ocupa toda la altura de la ventana */
+    box-sizing: border-box;
+    /* Padding y border incluidos en dimensiones */
+}
+
+/* Herencia de box-sizing para todos los elementos */
+*,
+*:before,
+*:after {
+    box-sizing: inherit;
+}
+
+/* ========= ESTILOS GENERALES ========= */
+/* Estilos para títulos */
+h2,
+h3 {
+    text-align: center;
+    color: white;
+}
+
+#clases-recientes {
+    text-align: left;
+    color: white;
+    margin: 15px;
+}
+
+/* Estilos base para botones */
+button {
+    cursor: pointer;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+}
+
+/* Estilos generales del cuerpo */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    /* Redundante (ya aplicado en html/body) */
+    background-color: #a2b5c9;
+}
+
+/* ========= HEADER ========= */
+/* Contenedor superior de navegación */
+.header {
+    background-color: #1f2b4c;
+    color: white;
+    padding: 16px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+}
+
+/* Flecha de retroceso en header */
+.header .back-arrow {
+    text-decoration: none;
+    font-size: 24px;
+    margin-right: 10px;
+    color: white;
+}
+
+/* ========= FORMULARIOS ========= */
+/* Contenedor principal */
+.container {
+    padding: 20px;
+}
+
+/* Etiquetas de formulario */
+label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    color: #1f2b4c;
+}
+
+/* Campos de texto */
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+/* Inputs para alumnos */
+.alumno-input {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.alumno-input input {
+    flex: 1;
+    /* Ocupa espacio disponible */
+    margin-right: 10px;
+}
+
+/* Botón de agregar alumno */
+.alumno-input button {
+    padding: 10px;
+    background-color: #1f2b4c;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* Subtítulos sección */
+.subtitulo {
+    margin-top: 20px;
+    color: #1f2b4c;
+}
+
+/* ========= LISTA DE ALUMNOS ========= */
+/* Contenedor de lista */
+.lista-alumnos {
+    background-color: #1f2b4c;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 10px;
+    max-height: 200px;
+    /* Altura máxima con scroll */
+    overflow-y: auto;
+    /* Scroll vertical si excede altura */
+}
+
+/* Items de alumno */
+.alumno-item {
+    background-color: #c2d3e4;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #1f2b4c;
+}
+
+/* Contenedor de botones de acción */
+.alumno-item .acciones {
+    display: flex;
+    gap: 8px;
+    /* Espacio entre botones */
+}
+
+/* Botones de acciones */
+.acciones button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #1f2b4c;
+    font-size: 16px;
+}
+
+/* ========= BOTONES FINALES ========= */
+/* Contenedor para botones inferiores */
+.botones-finales {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+/* Botones inferiores (versión anchor y button) */
+.botones-finales a,
+.botones-finales button {
+    width: 48%;
+    padding: 12px;
+    background-color: white;
+    color: #1f2b4c;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Input durante edición */
+.input-edicion {
+    padding: 6px;
+    margin-right: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* ========= PÁGINA LOGIN ========= */
+/* Fondo completo */
+.fondo-login {
+    background-color: #2f3b5a;
+    height: 100vh;
+    /* Altura completa de ventana */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Contenedor de login */
+.contenedor-login {
+    background-color: #99b1c5;
+    width: 80%;
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Contenedor imagen de usuario */
+.imagen-usuario {
+    width: 120px;
+    height: 120px;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+/* Imagen dentro del contenedor */
+.imagen-usuario img {
+    width: 100%;
+    height: 100%;
+}
+
+/* Inputs con icono */
+.input-con-icono {
+    width: 100%;
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* Estilo de input con icono */
+.input-con-icono input {
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: 40px;
+    /* Espacio para icono izquierdo */
+    height: 40px;
+    border-radius: 8px;
+    border: none;
+    background-color: #e1e8f0;
+    font-size: 14px;
+    margin-bottom: 14px;
+}
+
+/* Posición de icono en input */
+.input-con-icono img {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    opacity: 0.6;
+}
+
+/* Botón principal */
+.btn-principal {
+    background-color: #2f3b5a;
+    color: white;
+    padding: 10px 20px;
+    margin-top: 10px;
+}
+
+/* ========= PÁGINA CLASES ========= */
+/* Fondo completo */
+.fondo-clases {
+    background-color: #2f3b5a;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 60px;
+    /* Espacio para botón flotante */
+}
+
+/* Contenedor de tarjetas */
+.contenedor-tarjetas {
+    flex: 1;
+    /* Ocupa espacio restante */
+    overflow-y: auto;
+    /* Scroll vertical si es necesario */
+    padding: 0 10px;
+}
+
+/* Tarjeta individual */
+.tarjeta-clase {
+    background-color: #cfd8e8;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 20px 0;
+    position: relative;
+}
+
+/* Texto en tarjeta */
+.tarjeta-clase p {
+    margin: 0;
+    color: #5b7b95;
+}
+
+/* Texto fuerte en tarjeta */
+.tarjeta-clase p strong {
+    color: #2f3b5a;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Botones de acciones en tarjeta */
+.acciones-clase {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    justify-content: center;
+}
+
+.acciones-clase button {
+    background-color: #2f3b5a;
+    color: white;
+    padding: 5px 10px;
+}
+
+/* Icono de configuración */
+.configurar-clase {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.configurar-clase img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* Botón nueva clase */
+.btn-nueva-clase {
+    background-color: white;
+    color: #2f3b5a;
+    padding: 10px;
+    width: 40%;
+    position: fixed;
+    bottom: 10px;
+    left: 30%;
+    /* Centrado horizontal */
+    right: 30%;
+}
+
+/* ========= PÁGINA REGISTROS ========= */
+/* Fondo completo */
+.fondo-registros {
+    background-color: #a2b5c9;
+
+    min-height: 100vh;
+    color: white;
+}
+
+/* Sección de búsqueda por fecha */
+.busqueda-fecha {
+    margin-bottom: 15px;
+    padding: 15px;
+}
+
+.busqueda-fecha label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* Selector de fecha */
+.busqueda-fecha input[type="date"] {
+    width: 95%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background-color: #cfd8e8;
+    color: #2f3b5a;
+}
+
+/* Tarjeta de registro individual */
+.tarjeta-registro {
+    background-color: #1c2c4a;
+    color: #ffffff;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    margin: 15px;
+}
+
+/* Botón de volver */
+.btn-volver {
+    background-color: #99b1c5;
+    color: #1c2c4a;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 18px;
+    margin-top: 20px;
+}
+
+/* ========= TOMAR ASISTENCIA ========= */
+/* Reset local para esta página */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Contenedor principal tipo móvil */
+.app-container {
+    max-width: 393px;
+    /* Ancho iPhone 16 */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0 12px;
+}
+
+/* Header de la app */
+.app-header {
+    background-color: #1f2b4c;
+    /* mismo fondo que .header de “Crear Clase” */
+    color: #FFF;
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    /* igual que en tu otro .header */
+    font-size: 18px;
+    /* igual que en tu otro .header */
+    gap: 10px;
+    /* espacio entre flecha y texto */
+
+    width: calc(100% + 24px);
+    /* 100% de .app-container más sus 12px de padding a cada lado */
+    margin: 0 -12px;
+    /* desplaza el header hacia los bordes */
+}
+
+
+/* Botón de retroceso */
+.app-header .back-btn {
+    background: none;
+    border: none;
+    color: #FFF;
+    font-size: 1.2rem;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.app-header h1 {
+    margin: 0;
+    /* quita márgenes por defecto */
+    font-weight: normal;
+}
+
+/* Fecha debajo del header */
+.date {
+    margin: 8px 0 16px;
+    color: #3C4A64;
+    font-size: 16px;
+    text-align: left;
+    font-weight: bold;
+}
+
+/* Tarjeta de alumno */
+.card {
+    width: 100%;
+    max-width: 393px;
+    padding: 15px;
+    border-radius: 20px;
+    background-color: #2d3a64;
+    display: flex;
+    align-items: center;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Foto de alumno */
+.photo {
+    width: 70px;
+    height: 70px;
+    background-color: #d3d3d3;
+    border: 2px solid #000;
+    border-radius: 10px;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+/* Contenedor de información */
+.info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+}
+
+/* Nombre del alumno */
+.name {
+    font-size: 18px;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+/* Grupo de radios (asistencia) */
+.radios {
+    display: flex;
+    gap: 10px;
+}
+
+/* Grupo individual de radio */
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.radio-group label {
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+/* Estilo del radio button */
+.radio-group input[type="radio"] {
+    width: 28px;
+    height: 28px;
+    accent-color: #b0c4de;
+    cursor: pointer;
+}
+
+/* ========= BOTONERA INFERIOR ========= */
+.botonera {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+    position: sticky;
+    bottom: 10px;
+    background: #D1D8E6;
+    padding: 10px 0;
+}
+
+.botonera button {
+    padding: 12px 20px;
+    background-color: #dce3ed;
+    color: #2d3a64;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    min-width: 150px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    line-height: 1.3;
+}
+
+/* Efecto hover opcional */
+.botonera button:hover {
+    background-color: #cbd6e5;
+    transform: translateY(-2px);
+}
+
+#listaAlumnosContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+    padding: 5px;
+}
+
+/* ========= MODAL DE REGISTROS ========= */
+/* Fondo oscuro */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    /* Fondo más oscuro */
+    z-index: 1000;
+    /* Mayor prioridad */
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-contenido {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    /* Altura máxima con scroll */
+    overflow-y: auto;
+    color: #1c2c4a;
+}
+
+/* Nuevos estilos específicos para modal de configuración */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.cerrar-modal {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #1c2c4a;
+}
+
+.lista-alumnos-config {
+    margin: 15px 0;
+}
+
+.alumno-item-config {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.acciones-alumno {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-eliminar-clase {
+    background-color: #ff4d4d;
+    color: white;
+    margin-top: 20px;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    width: 100%;
+}
+
+.modal-contenido li {
+    margin-bottom: 5px;
+}
+
+/* Clase utilitaria para ocultar */
+.oculto {
+    display: none;
+}
+
+.modal.visible {
+    display: flex;
+}
+
+/* Tu CSS completo va aquí... */
+/* ... (todo tu CSS original) ... */
+
+/* ESTILO AÑADIDO PARA LAS FOTOS DE ALUMNOS */
+.photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}

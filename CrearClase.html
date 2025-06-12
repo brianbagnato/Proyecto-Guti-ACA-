@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="./img/favicon.png" />
+    <title>Presente</title>
+    <link rel="stylesheet" href="style.css" />
+
+</head>
+
+<body>
+    <div class="header">
+        <a href="clases.html" class="back-arrow">&larr;</a>
+        Crear Nueva Clase
+    </div>
+
+    <div class="container">
+        <label for="nombre">Nombre de Clase</label>
+        <input type="text" id="nombre" placeholder="Matemáticas 101" required />
+
+        <label for="curso">Curso</label>
+        <input type="text" id="curso" placeholder="1er Año" required />
+
+        <label for="alumno">Nuevo Alumno</label>
+        <div class="alumno-input">
+            <input type="text" id="alumno" placeholder="Nombre completo" />
+            <button id="btnAgregarAlumno">+</button>
+        </div>
+
+        <h4 class="subtitulo">Alumnos añadidos</h4>
+        <div class="lista-alumnos"></div>
+
+        <div class="botones-finales">
+            <button id="btnGuardar">GUARDAR</button>
+            <button id="btnImportar">IMPORTAR</button>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación al salir sin guardar -->
+    <div id="modalSalirSinGuardar" class="modal">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h3>¿Salir sin guardar?</h3>
+                <button class="cerrar-modal" id="cerrarModalSalir">&times;</button>
+            </div>
+            <p>Tienes cambios sin guardar. ¿Deseas salir de todos modos?</p>
+            <div class="botones-finales">
+                <button id="confirmarSalida">Sí, salir</button>
+                <button id="cancelarSalida">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let alumnoCount = 0;
+        let alumnosTemp = [];
+        let isDirty = false;
+        let claseActual = {
+            nombre: '',
+            curso: '',
+            alumnos: []
+        };
+
+        const listaAlumnos = document.querySelector('.lista-alumnos');
+        const btnAgregarAlumno = document.getElementById('btnAgregarAlumno');
+        const inputAlumno = document.getElementById('alumno');
+        const btnGuardar = document.getElementById('btnGuardar');
+        const inputNombreClase = document.getElementById('nombre');
+        const inputCurso = document.getElementById('curso');
+        const linkVolver = document.querySelector('.back-arrow');
+
+        const modalSalir = document.getElementById('modalSalirSinGuardar');
+        const btnCerrarModalSalir = document.getElementById('cerrarModalSalir');
+        const btnConfirmarSalida = document.getElementById('confirmarSalida');
+        const btnCancelarSalida = document.getElementById('cancelarSalida');
+
+        function crearAlumnoUI(nombre, index) {
+            const div = document.createElement('div');
+            div.className = 'alumno-item';
+
+            const spanNombre = document.createElement('span');
+            spanNombre.textContent = nombre;
+            spanNombre.className = 'nombre-alumno';
+            spanNombre.dataset.index = index;
+
+            const acciones = document.createElement('div');
+            acciones.className = 'acciones';
+
+            const btnEditar = document.createElement('button');
+            btnEditar.title = "Editar alumno";
+            const iconoEditar = document.createElement('img');
+            iconoEditar.src = 'img/favicon.png';
+            iconoEditar.alt = 'Editar';
+            iconoEditar.style.width = '20px';
+            iconoEditar.style.height = '20px';
+            btnEditar.appendChild(iconoEditar);
+            btnEditar.onclick = () => editarAlumno(spanNombre);
+
+            const btnEliminar = document.createElement('button');
+            btnEliminar.title = "Eliminar alumno";
+            const iconoEliminar = document.createElement('img');
+            iconoEliminar.src = './img/Vector.png';
+            iconoEliminar.alt = 'Eliminar';
+            iconoEliminar.style.width = '20px';
+            iconoEliminar.style.height = '20px';
+            btnEliminar.appendChild(iconoEliminar);
+            btnEliminar.onclick = () => {
+                div.remove();
+                alumnosTemp.splice(index, 1);
+                actualizarListaUI();
+                isDirty = true;
+            };
+
+            acciones.appendChild(btnEditar);
+            acciones.appendChild(btnEliminar);
+            div.appendChild(spanNombre);
+            div.appendChild(acciones);
+            listaAlumnos.appendChild(div);
+        }
+
+        function actualizarListaUI() {
+            listaAlumnos.innerHTML = '';
+            alumnosTemp.forEach((nombre, index) => crearAlumnoUI(nombre, index));
+        }
+
+        function editarAlumno(span) {
+            const originalNombre = span.textContent;
+            const contenedor = span.parentElement;
+
+            const input = document.createElement('input');
+            input.value = originalNombre;
+            input.className = 'input-edicion';
+            input.type = 'text';
+
+            const acciones = contenedor.querySelector('.acciones');
+            acciones.innerHTML = '';
+
+            const btnAceptar = document.createElement('button');
+            btnAceptar.title = "Aceptar";
+            const iconoCheck = document.createElement('img');
+            iconoCheck.src = 'img/check.png';
+            iconoCheck.alt = 'Aceptar';
+            iconoCheck.style.width = '20px';
+            iconoCheck.style.height = '20px';
+            btnAceptar.appendChild(iconoCheck);
+            btnAceptar.onclick = () => {
+                const nuevoNombre = input.value.trim();
+                if (nuevoNombre !== '') {
+                    span.textContent = nuevoNombre;
+                    const index = parseInt(span.dataset.index, 10);
+                    if (!isNaN(index)) {
+                        alumnosTemp[index] = nuevoNombre;
+                        isDirty = true;
+                    }
+                }
+                restaurarVista(span, input, acciones);
+            };
+
+            const btnCancelar = document.createElement('button');
+            btnCancelar.title = "Cancelar";
+            const iconoCancelar = document.createElement('img');
+            iconoCancelar.src = 'img/cancelar.png';
+            iconoCancelar.alt = 'Cancelar';
+            iconoCancelar.style.width = '20px';
+            iconoCancelar.style.height = '20px';
+            btnCancelar.appendChild(iconoCancelar);
+            btnCancelar.onclick = () => restaurarVista(span, input, acciones);
+
+            contenedor.insertBefore(input, span);
+            span.style.display = 'none';
+            input.focus();
+
+            acciones.appendChild(btnAceptar);
+            acciones.appendChild(btnCancelar);
+        }
+
+        function restaurarVista(span, input, acciones) {
+            input.remove();
+            span.style.display = '';
+
+            acciones.innerHTML = '';
+
+            const btnEditar = document.createElement('button');
+            btnEditar.title = "Editar alumno";
+            const iconoEditar = document.createElement('img');
+            iconoEditar.src = 'img/favicon.png';
+            iconoEditar.alt = 'Editar';
+            iconoEditar.style.width = '20px';
+            iconoEditar.style.height = '20px';
+            btnEditar.appendChild(iconoEditar);
+            btnEditar.onclick = () => editarAlumno(span);
+
+            const btnEliminar = document.createElement('button');
+            btnEliminar.title = "Eliminar alumno";
+            const iconoEliminar = document.createElement('img');
+            iconoEliminar.src = './img/Vector.png';
+            iconoEliminar.alt = 'Eliminar';
+            iconoEliminar.style.width = '20px';
+            iconoEliminar.style.height = '20px';
+            btnEliminar.appendChild(iconoEliminar);
+            btnEliminar.onclick = () => {
+                const index = parseInt(span.dataset.index, 10);
+                if (!isNaN(index)) {
+                    alumnosTemp.splice(index, 1);
+                    actualizarListaUI();
+                    isDirty = true;
+                }
+            };
+
+            acciones.appendChild(btnEditar);
+            acciones.appendChild(btnEliminar);
+        }
+
+        btnAgregarAlumno.addEventListener('click', () => {
+            let nombre = inputAlumno.value.trim();
+            if (nombre === '') {
+                alumnoCount++;
+                nombre = `Alumno ${alumnoCount}`;
+            }
+
+            alumnosTemp.push(nombre);
+            crearAlumnoUI(nombre, alumnosTemp.length - 1);
+            inputAlumno.value = '';
+            inputAlumno.blur();
+            isDirty = true;
+        });
+
+        btnGuardar.addEventListener('click', () => {
+            const nombreClase = inputNombreClase.value.trim();
+            const curso = inputCurso.value.trim();
+
+            if (!nombreClase || !curso) {
+                alert('Nombre de clase y curso son obligatorios');
+                return;
+            }
+
+            claseActual = {
+                id: Date.now(),
+                nombre: nombreClase,
+                curso: curso,
+                alumnos: [...alumnosTemp]
+            };
+
+            const clasesGuardadas = JSON.parse(localStorage.getItem('clases')) || [];
+            clasesGuardadas.push(claseActual);
+            localStorage.setItem('clases', JSON.stringify(clasesGuardadas));
+
+            alumnosTemp = [];
+            inputNombreClase.value = '';
+            inputCurso.value = '';
+            listaAlumnos.innerHTML = '';
+            isDirty = false;
+
+            setTimeout(() => window.location.href = 'clases.html', 100);
+        });
+
+        inputAlumno.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') btnAgregarAlumno.click();
+        });
+
+        inputNombreClase.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') inputCurso.focus();
+        });
+
+        inputCurso.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') inputAlumno.focus();
+        });
+
+        inputNombreClase.addEventListener('input', () => isDirty = true);
+        inputCurso.addEventListener('input', () => isDirty = true);
+
+        linkVolver.addEventListener('click', function (e) {
+            if (isDirty) {
+                e.preventDefault();
+                modalSalir.style.display = 'flex';
+            }
+        });
+
+        btnCerrarModalSalir.addEventListener('click', () => {
+            modalSalir.style.display = 'none';
+        });
+
+        btnCancelarSalida.addEventListener('click', () => {
+            modalSalir.style.display = 'none';
+        });
+
+        btnConfirmarSalida.addEventListener('click', () => {
+            window.location.href = 'clases.html';
+        });
+    </script>
+</body>
+
+</html>

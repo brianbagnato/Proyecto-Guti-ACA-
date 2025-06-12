@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Registros de Asistencia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="fondo-registros">
+    <div class="header">
+        <a href="clases.html" class="back-arrow">&larr;</a>
+        Registros de Asistencia
+    </div>
+
+    <div class="busqueda-fecha">
+        <label for="fecha">Filtrar por fecha</label>
+        <input type="date" id="fecha" />
+    </div>
+
+    <h3 id="clases-recientes">Clases Recientes</h3>
+
+    <div class="registros-container">
+        <!-- Las tarjetas se generarán dinámicamente aquí -->
+    </div>
+
+    <!-- Modal para detalles -->
+    <div id="modal" class="modal">
+        <div class="modal-contenido">
+            <h3 id="modal-titulo">Detalles de Asistencia</h3>
+            <ul id="lista-detalles"></ul>
+            <button onclick="cerrarModal()">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo para demostración
+        const demoData = {
+            clases: [
+                { id: "1", nombre: "Matemáticas Avanzadas", curso: "10mo A" },
+                { id: "2", nombre: "Literatura Contemporánea", curso: "11vo B" },
+                { id: "3", nombre: "Física Cuántica", curso: "12vo C" }
+            ],
+            asistencias: {
+                "asistencia_1_2024_05_20": [
+                    { nombre: "María García", estado: "Presente" },
+                    { nombre: "Carlos López", estado: "Presente" },
+                    { nombre: "Ana Martínez", estado: "Ausente" },
+                    { nombre: "Pedro Sánchez", estado: "Tardanza" }
+                ],
+                "asistencia_2_2024_05_22": [
+                    { nombre: "Lucía Fernández", estado: "Presente" },
+                    { nombre: "Jorge Ruiz", estado: "Ausente" },
+                    { nombre: "Sofía Díaz", estado: "Presente" }
+                ],
+                "asistencia_3_2024_05_25": [
+                    { nombre: "Miguel Ángel Torres", estado: "Presente" },
+                    { nombre: "Elena Vargas", estado: "Presente" },
+                    { nombre: "David Jiménez", estado: "Presente" },
+                    { nombre: "Laura Gómez", estado: "Tardanza" }
+                ]
+            }
+        };
+
+        // Cargar datos de demostración
+        function cargarDatosDemo() {
+            localStorage.setItem('clases', JSON.stringify(demoData.clases));
+            for (const [key, value] of Object.entries(demoData.asistencias)) {
+                localStorage.setItem(key, JSON.stringify(value));
+            }
+        }
+
+        // Función para formatear fechas
+        function formatearFecha(fechaStr) {
+            if (!fechaStr) return "";
+            // Manejar formato con guiones bajos
+            const partes = fechaStr.includes("_") ? fechaStr.split("_") : fechaStr.split("-");
+            if (partes.length >= 3) {
+                const [y, m, d] = partes;
+                return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+            }
+            return fechaStr;
+        }
+
+        // Obtener parámetro de URL
+        function obtenerParametro(nombre) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(nombre);
+        }
+
+        // Cargar registros desde localStorage
+        function cargarRegistros() {
+            const clases = JSON.parse(localStorage.getItem('clases')) || [];
+            const claseIdSeleccionada = obtenerParametro('claseId');
+            const contenedor = document.querySelector('.registros-container');
+            contenedor.innerHTML = '';
+
+            let registrosEncontrados = false;
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('asistencia_')) {
+                    const partes = key.split('_');
+                    const claseId = partes[1];
+                    const fecha = partes.slice(2).join('_');
+
+                    if (claseIdSeleccionada && claseId !== claseIdSeleccionada) continue;
+
+                    const clase = clases.find(c => c.id == claseId);
+                    if (clase) {
+                        registrosEncontrados = true;
+                        const tarjeta = document.createElement('div');
+                        tarjeta.className = 'tarjeta-registro';
+                        tarjeta.innerHTML = `
+                <p>Clase: <strong>${clase.nombre}</strong><br>Curso: ${clase.curso}</p>
+                <span>${formatearFecha(fecha)}</span>
+              `;
+                        tarjeta.addEventListener('click', () => mostrarDetalles(key));
+                        contenedor.appendChild(tarjeta);
+                    }
+                }
+            }
+
+            if (!registrosEncontrados) {
+                contenedor.innerHTML = `
+            <div class="empty-state">
+              <h4>No hay registros de asistencia</h4>
+              <p>Cuando tomes asistencia, aparecerán aquí</p>
+            </div>
+          `;
+            }
+        }
+
+        // Mostrar detalles en el modal
+        function mostrarDetalles(clave) {
+            const datos = JSON.parse(localStorage.getItem(clave));
+            const lista = document.getElementById('lista-detalles');
+            lista.innerHTML = '';
+
+            // Extraer fecha de la clave
+            const partes = clave.split('_');
+            const fechaRaw = partes.slice(2).join('_');
+            const titulo = document.getElementById('modal-titulo');
+            titulo.textContent = `Asistencia del ${formatearFecha(fechaRaw)}`;
+
+            datos.forEach(a => {
+                const li = document.createElement('li');
+
+                // Determinar color según estado
+                let estadoClass = '';
+                if (a.estado === 'Presente') estadoClass = 'presente';
+                if (a.estado === 'Ausente') estadoClass = 'ausente';
+                if (a.estado === 'Tardanza') estadoClass = 'tardanza';
+
+                li.innerHTML = `
+            <span>${a.nombre}</span>
+            <span class="estado ${estadoClass}">${a.estado}</span>
+          `;
+                lista.appendChild(li);
+            });
+
+            const modal = document.getElementById('modal');
+            modal.classList.add('visible');
+        }
+
+        // Cerrar modal
+        function cerrarModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.remove('visible');
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cargar datos de demostración si no hay datos reales
+            if (!localStorage.getItem('clases') || localStorage.length < 4) {
+                cargarDatosDemo();
+            }
+
+            cargarRegistros();
+
+            // Event listener para cerrar modal haciendo clic fuera del contenido
+            const modal = document.getElementById('modal');
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    cerrarModal();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
