@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="./img/favicon.png">
     <title>Presente</title>
     <link rel="stylesheet" href="style.css" />
+
 </head>
 
 <body class="fondo-clases">
@@ -20,146 +21,11 @@
         <button class="btn-nueva-clase">+ NUEVA CLASE</button>
     </a>
 
-    <!-- Modal de Configuración -->
-    <div id="modalConfiguracion" class="modal">
-        <div class="modal-contenido">
-            <div class="modal-header">
-                <h3 id="tituloModal">Configurar Clase</h3>
-                <button class="cerrar-modal">&times;</button>
-            </div>
-
-            <div class="form-group">
-                <label for="nombreClaseModal">Nombre de Clase</label>
-                <input type="text" id="nombreClaseModal">
-            </div>
-
-            <div class="form-group">
-                <label for="cursoModal">Curso</label>
-                <input type="text" id="cursoModal">
-            </div>
-
-            <h4>Alumnos</h4>
-            <div class="lista-alumnos-config" id="listaAlumnosModal">
-                <!-- Alumnos se cargarán aquí -->
-            </div>
-
-            <div class="form-group">
-                <label for="nuevoAlumnoModal">Agregar Alumno</label>
-                <div class="alumno-input">
-                    <input type="text" id="nuevoAlumnoModal" placeholder="Nombre del alumno">
-                    <button id="btnAgregarAlumnoModal">+</button>
-                </div>
-            </div>
-
-            <div class="botones-finales">
-                <button id="btnGuardarConfig">GUARDAR CAMBIOS</button>
-                <button id="btnEliminarClase" class="btn-eliminar-clase">ELIMINAR CLASE</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const contenedor = document.querySelector('.contenedor-tarjetas');
-            const modal = document.getElementById('modalConfiguracion');
-            const btnCerrarModal = document.querySelector('.cerrar-modal');
             const clases = JSON.parse(localStorage.getItem('clases')) || [];
-            let claseActual = null;
 
-            // Función para mostrar el modal de configuración
-            function mostrarModalConfiguracion(claseId) {
-                claseActual = clases.find(c => c.id == claseId);
-                if (!claseActual) return;
-
-                // Llenar datos en el modal
-                document.getElementById('nombreClaseModal').value = claseActual.nombre;
-                document.getElementById('cursoModal').value = claseActual.curso;
-
-                // Mostrar alumnos
-                const listaAlumnos = document.getElementById('listaAlumnosModal');
-                listaAlumnos.innerHTML = '';
-
-                claseActual.alumnos.forEach((alumno, index) => {
-                    const alumnoDiv = document.createElement('div');
-                    alumnoDiv.className = 'alumno-item-config';
-                    alumnoDiv.innerHTML = `
-            <span>${alumno}</span>
-            <div class="acciones-alumno">
-              <button class="btn-editar-alumno" data-index="${index}">✏️</button>
-              <button class="btn-eliminar-alumno" data-index="${index}">🗑️</button>
-            </div>
-          `;
-                    listaAlumnos.appendChild(alumnoDiv);
-                });
-
-                // Mostrar modal
-                modal.style.display = 'flex';
-            }
-
-            // Cerrar modal
-            btnCerrarModal.addEventListener('click', () => {
-                modal.style.display = 'none';
-            });
-
-            // Clic fuera del modal para cerrar
-            window.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.style.display = 'none';
-                }
-            });
-
-            // Agregar nuevo alumno desde el modal
-            document.getElementById('btnAgregarAlumnoModal').addEventListener('click', () => {
-                const nombre = document.getElementById('nuevoAlumnoModal').value.trim();
-                if (nombre) {
-                    claseActual.alumnos.push(nombre);
-                    mostrarModalConfiguracion(claseActual.id); // Recargar lista
-                    document.getElementById('nuevoAlumnoModal').value = '';
-                }
-            });
-
-            // Guardar cambios en la clase
-            document.getElementById('btnGuardarConfig').addEventListener('click', () => {
-                claseActual.nombre = document.getElementById('nombreClaseModal').value;
-                claseActual.curso = document.getElementById('cursoModal').value;
-
-                localStorage.setItem('clases', JSON.stringify(clases));
-                alert('Cambios guardados correctamente');
-                location.reload(); // Recargar para ver cambios
-            });
-
-            // Eliminar clase
-            document.getElementById('btnEliminarClase').addEventListener('click', () => {
-                if (confirm('¿Estás seguro de eliminar esta clase? Esta acción no se puede deshacer.')) {
-                    const nuevasClases = clases.filter(c => c.id !== claseActual.id);
-                    localStorage.setItem('clases', JSON.stringify(nuevasClases));
-                    modal.style.display = 'none';
-                    alert('Clase eliminada correctamente');
-                    location.reload();
-                }
-            });
-
-            // Delegación de eventos para acciones de alumnos
-            document.getElementById('listaAlumnosModal').addEventListener('click', (e) => {
-                if (e.target.classList.contains('btn-editar-alumno')) {
-                    const index = e.target.dataset.index;
-                    const nuevoNombre = prompt('Editar nombre del alumno:', claseActual.alumnos[index]);
-                    if (nuevoNombre !== null) {
-                        claseActual.alumnos[index] = nuevoNombre.trim();
-                        mostrarModalConfiguracion(claseActual.id); // Recargar
-                    }
-                }
-
-                if (e.target.classList.contains('btn-eliminar-alumno')) {
-                    const index = e.target.dataset.index;
-                    if (confirm('¿Eliminar este alumno?')) {
-                        claseActual.alumnos.splice(index, 1);
-                        mostrarModalConfiguracion(claseActual.id); // Recargar
-                    }
-                }
-            });
-
-            // Generar tarjetas de clase
             clases.forEach(clase => {
                 const tarjeta = document.createElement('div');
                 tarjeta.className = 'tarjeta-clase';
@@ -173,19 +39,11 @@
               <button>Registros anteriores</button>
             </a>
           </div>
-          <a href="#" class="configurar-clase" data-id="${clase.id}">
+          <a href="CrearClase.html?editar=${clase.id}" class="configurar-clase">
             <img src="./img/config-icon.png" alt="Configurar" />
           </a>
         `;
                 contenedor.appendChild(tarjeta);
-            });
-
-            // Asignar eventos a los botones de configuración
-            document.querySelectorAll('.configurar-clase').forEach(boton => {
-                boton.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    mostrarModalConfiguracion(boton.dataset.id);
-                });
             });
         });
     </script>

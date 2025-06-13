@@ -8,6 +8,65 @@
     <title>Presente</title>
     <link rel="stylesheet" href="style.css" />
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        #btnAgregarAlumno {
+            background-color: gray;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 18px;
+            cursor: not-allowed;
+            transition: background-color 0.3s ease;
+        }
+
+        #btnAgregarAlumno.activo {
+            background-color: royalblue;
+            cursor: pointer;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .modal-contenido {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cerrar-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .botones-finales {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 
 <body>
@@ -38,7 +97,6 @@
         </div>
     </div>
 
-    <!-- Modal de confirmación al salir sin guardar -->
     <div id="modalSalirSinGuardar" class="modal">
         <div class="modal-contenido">
             <div class="modal-header">
@@ -54,7 +112,6 @@
     </div>
 
     <script>
-        let alumnoCount = 0;
         let alumnosTemp = [];
         let isDirty = false;
         let claseActual = {
@@ -66,6 +123,16 @@
         const listaAlumnos = document.querySelector('.lista-alumnos');
         const btnAgregarAlumno = document.getElementById('btnAgregarAlumno');
         const inputAlumno = document.getElementById('alumno');
+        function actualizarEstiloBotonAgregar() {
+            const tieneTexto = inputAlumno.value.trim().length > 0;
+            if (tieneTexto) {
+                btnAgregarAlumno.classList.add('activo');
+            } else {
+                btnAgregarAlumno.classList.remove('activo');
+            }
+        }
+        inputAlumno.addEventListener('input', actualizarEstiloBotonAgregar);
+
         const btnGuardar = document.getElementById('btnGuardar');
         const inputNombreClase = document.getElementById('nombre');
         const inputCurso = document.getElementById('curso');
@@ -75,6 +142,27 @@
         const btnCerrarModalSalir = document.getElementById('cerrarModalSalir');
         const btnConfirmarSalida = document.getElementById('confirmarSalida');
         const btnCancelarSalida = document.getElementById('cancelarSalida');
+
+        // Detectar edición desde URL
+        function obtenerParametro(nombre) {
+            const url = new URL(window.location.href);
+            return url.searchParams.get(nombre);
+        }
+
+        const idEditar = obtenerParametro('editar');
+        if (idEditar) {
+            const clasesGuardadas = JSON.parse(localStorage.getItem('clases')) || [];
+            const claseEditada = clasesGuardadas.find(c => c.id == idEditar);
+
+            if (claseEditada) {
+                inputNombreClase.value = claseEditada.nombre;
+                inputCurso.value = claseEditada.curso;
+                alumnosTemp = [...claseEditada.alumnos];
+                actualizarListaUI();
+                claseActual.id = claseEditada.id;
+                isDirty = false;
+            }
+        }
 
         function crearAlumnoUI(nombre, index) {
             const div = document.createElement('div');
@@ -87,6 +175,7 @@
 
             const acciones = document.createElement('div');
             acciones.className = 'acciones';
+
 
             const btnEditar = document.createElement('button');
             btnEditar.title = "Editar alumno";
@@ -101,13 +190,13 @@
             const btnEliminar = document.createElement('button');
             btnEliminar.title = "Eliminar alumno";
             const iconoEliminar = document.createElement('img');
-            iconoEliminar.src = './img/Vector.png';
+            iconoEliminar.src = 'Vector.png';
             iconoEliminar.alt = 'Eliminar';
             iconoEliminar.style.width = '20px';
             iconoEliminar.style.height = '20px';
             btnEliminar.appendChild(iconoEliminar);
+
             btnEliminar.onclick = () => {
-                div.remove();
                 alumnosTemp.splice(index, 1);
                 actualizarListaUI();
                 isDirty = true;
@@ -179,99 +268,76 @@
         function restaurarVista(span, input, acciones) {
             input.remove();
             span.style.display = '';
-
-            acciones.innerHTML = '';
-
-            const btnEditar = document.createElement('button');
-            btnEditar.title = "Editar alumno";
-            const iconoEditar = document.createElement('img');
-            iconoEditar.src = 'img/favicon.png';
-            iconoEditar.alt = 'Editar';
-            iconoEditar.style.width = '20px';
-            iconoEditar.style.height = '20px';
-            btnEditar.appendChild(iconoEditar);
-            btnEditar.onclick = () => editarAlumno(span);
-
-            const btnEliminar = document.createElement('button');
-            btnEliminar.title = "Eliminar alumno";
-            const iconoEliminar = document.createElement('img');
-            iconoEliminar.src = './img/Vector.png';
-            iconoEliminar.alt = 'Eliminar';
-            iconoEliminar.style.width = '20px';
-            iconoEliminar.style.height = '20px';
-            btnEliminar.appendChild(iconoEliminar);
-            btnEliminar.onclick = () => {
-                const index = parseInt(span.dataset.index, 10);
-                if (!isNaN(index)) {
-                    alumnosTemp.splice(index, 1);
-                    actualizarListaUI();
-                    isDirty = true;
-                }
-            };
-
-            acciones.appendChild(btnEditar);
-            acciones.appendChild(btnEliminar);
+            actualizarListaUI();
         }
 
         btnAgregarAlumno.addEventListener('click', () => {
             let nombre = inputAlumno.value.trim();
-            if (nombre === '') {
-                alumnoCount++;
-                nombre = `Alumno ${alumnoCount}`;
+            if (nombre != '') {
+                alumnosTemp.push(nombre);
+                actualizarListaUI();
+                inputAlumno.value = '';
+                isDirty = true;
+                actualizarEstiloBotonAgregar();
             }
-
-            alumnosTemp.push(nombre);
-            crearAlumnoUI(nombre, alumnosTemp.length - 1);
-            inputAlumno.value = '';
-            inputAlumno.blur();
-            isDirty = true;
         });
 
         btnGuardar.addEventListener('click', () => {
             const nombreClase = inputNombreClase.value.trim();
             const curso = inputCurso.value.trim();
+            const alumnoPendiente = inputAlumno.value.trim();
 
             if (!nombreClase || !curso) {
                 alert('Nombre de clase y curso son obligatorios');
                 return;
             }
 
-            claseActual = {
-                id: Date.now(),
-                nombre: nombreClase,
-                curso: curso,
-                alumnos: [...alumnosTemp]
-            };
+            if (alumnoPendiente !== '') {
+                alumnosTemp.push(alumnoPendiente);
+                inputAlumno.value = '';
+            }
+
+            claseActual.nombre = nombreClase;
+            claseActual.curso = curso;
+            claseActual.alumnos = [...alumnosTemp];
+            if (!claseActual.id) claseActual.id = Date.now().toString();
 
             const clasesGuardadas = JSON.parse(localStorage.getItem('clases')) || [];
-            clasesGuardadas.push(claseActual);
-            localStorage.setItem('clases', JSON.stringify(clasesGuardadas));
+            const index = clasesGuardadas.findIndex(c => c.id === claseActual.id);
+            if (index !== -1) {
+                clasesGuardadas[index] = claseActual;
+            } else {
+                clasesGuardadas.push(claseActual);
+            }
 
-            alumnosTemp = [];
-            inputNombreClase.value = '';
-            inputCurso.value = '';
-            listaAlumnos.innerHTML = '';
+            localStorage.setItem('clases', JSON.stringify(clasesGuardadas));
             isDirty = false;
 
-            setTimeout(() => window.location.href = 'clases.html', 100);
+            // --- MODIFICACIÓN AQUÍ ---
+            // Muestra una alerta de éxito y luego redirige
+            Swal.fire({
+                title: '¡Clase Guardada!',
+                text: 'La clase ha sido guardada correctamente.',
+                icon: 'success',
+                timer: 2000, // La alerta se cierra automáticamente después de 2 segundos
+                showConfirmButton: false, // Oculta el botón de "OK"
+                allowOutsideClick: false // No permite cerrar haciendo clic afuera
+            }).then(() => {
+                // Esta parte se ejecuta DESPUÉS de que la alerta se cierra
+                window.location.href = 'clases.html';
+            });
+            // --- FIN DE LA MODIFICACIÓN ---
         });
 
-        inputAlumno.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') btnAgregarAlumno.click();
-        });
-
-        inputNombreClase.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') inputCurso.focus();
-        });
-
-        inputCurso.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') inputAlumno.focus();
-        });
-
+        // Confirmación al salir
         inputNombreClase.addEventListener('input', () => isDirty = true);
         inputCurso.addEventListener('input', () => isDirty = true);
 
-        linkVolver.addEventListener('click', function (e) {
+        linkVolver.addEventListener('click', (e) => {
+            const alumnoPendiente = inputAlumno.value.trim();
+            if (alumnoPendiente !== '') {
+                isDirty = true;
+            }
             if (isDirty) {
                 e.preventDefault();
                 modalSalir.style.display = 'flex';

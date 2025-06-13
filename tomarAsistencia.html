@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="icon" type="image/png" href="./img/favicon2.jpg">
+    <title>Presente</title>
+    <link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <header class="app-header">
+        <button class="back-btn" onclick="volverAClases()">&larr;</button>
+        <h1 id="tituloClase">Matemáticas - 1°A</h1>
+    </header>
+    <div class="app-container">
+        <!-- Header con botón de retroceso y título -->
+
+        <!-- Fecha actual -->
+        <p class="date" id="fechaActual"></p>
+
+        <!-- Contenedor para la lista de alumnos -->
+        <div id="listaAlumnosContainer">
+            <!-- Los alumnos se generarán aquí dinámicamente -->
+        </div>
+
+        <!-- Botones inferiores -->
+        <div class="botonera">
+            <button onclick="cerrarRegistro()">CERRAR<br>REGISTRO</button>
+            <button onclick="marcarTodos('P')">TODOS<br>PRESENTES</button>
+        </div>
+    </div>
+
+    <script>
+        // Función para obtener parámetro de la URL
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Función para formatear fecha
+        function formatearFecha(fecha) {
+            const opciones = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            return fecha.toLocaleDateString('es-ES', opciones);
+        }
+
+        // Función para generar las tarjetas de alumnos
+        function generarTarjetasAlumnos(alumnos) {
+            const container = document.getElementById('listaAlumnosContainer');
+            container.innerHTML = '';
+
+            alumnos.forEach((alumno, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+          <div class="photo">👤</div>
+          <div class="info">
+            <div class="name">${alumno}</div>
+            <div class="radios">
+              <div class="radio-group">
+                <label for="alumno${index}_p">P</label>
+                <input type="radio" id="alumno${index}_p" name="asistencia${index}" value="P">
+              </div>
+              <div class="radio-group">
+                <label for="alumno${index}_a">A</label>
+                <input type="radio" id="alumno${index}_a" name="asistencia${index}" value="A">
+              </div>
+              <div class="radio-group">
+                <label for="alumno${index}_t">T</label>
+                <input type="radio" id="alumno${index}_t" name="asistencia${index}" value="T">
+              </div>
+            </div>
+          </div>
+        `;
+                container.appendChild(card);
+            });
+        }
+
+        // Función principal al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            const claseId = getQueryParam('claseId');
+            if (!claseId) {
+                alert('Clase no especificada');
+                window.location.href = 'clases.html';
+                return;
+            }
+
+            // Obtener la clase del localStorage
+            const clases = JSON.parse(localStorage.getItem('clases')) || [];
+            const clase = clases.find(c => c.id == claseId);
+            if (!clase) {
+                alert('Clase no encontrada');
+                window.location.href = 'clases.html';
+                return;
+            }
+
+            // Mostrar datos de la clase
+            document.getElementById('tituloClase').textContent = `${clase.nombre} - ${clase.curso}`;
+
+            // Mostrar fecha actual
+            const fechaActual = new Date();
+            document.getElementById('fechaActual').textContent = formatearFecha(fechaActual);
+
+            // Generar tarjetas de alumnos
+            generarTarjetasAlumnos(clase.alumnos);
+        });
+
+        // ✅ Marca todos los radios con un valor dado (P, A o T)
+        function marcarTodos(valor) {
+            const radios = document.querySelectorAll(`input[type="radio"][value="${valor}"]`);
+            radios.forEach(radio => radio.checked = true);
+        }
+
+        // ✅ Cierra el registro y guarda la asistencia
+        function cerrarRegistro() {
+            const radios = document.querySelectorAll('input[type="radio"]');
+            const grupos = {};
+
+            // Agrupar por name (cada grupo representa un alumno)
+            radios.forEach(radio => {
+                const name = radio.name;
+                if (!grupos[name]) grupos[name] = [];
+                grupos[name].push(radio);
+            });
+
+            // Para cada grupo (alumno), si no está marcado ni P ni T, marcar A
+            Object.values(grupos).forEach(grupo => {
+                const algunoMarcado = grupo.find(r => r.checked && (r.value === "P" || r.value === "T"));
+                if (!algunoMarcado) {
+                    const ausente = grupo.find(r => r.value === "A");
+                    if (ausente) ausente.checked = true;
+                }
+            });
+
+            // Guardar el registro y volver
+            guardarAsistencia();
+            volverAClases();
+        }
+
+        // Volver a la página de clases
+        function volverAClases() {
+            window.location.href = 'clases.html';
+        }
+
+        // Guardar la asistencia en localStorage
+        function guardarAsistencia() {
+            const claseId = getQueryParam('claseId');
+            if (!claseId) return;
+
+            const fecha = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+            const registros = [];
+
+            // Recorrer todas las tarjetas de alumnos
+            document.querySelectorAll('.card').forEach((card, index) => {
+                const nombre = card.querySelector('.name').textContent;
+                // Obtener el estado seleccionado (P, A o T)
+                const estado = card.querySelector(`input[name="asistencia${index}"]:checked`)?.value || 'A';
+
+                registros.push({ nombre, estado });
+            });
+
+            // Guardar en localStorage con clave única
+            const clave = `asistencia_${claseId}_${fecha}`;
+            localStorage.setItem(clave, JSON.stringify(registros));
+
+            // Mostrar mensaje de éxito
+            alert(`Asistencia guardada correctamente para ${formatearFecha(new Date())}`);
+        }
+    </script>
+</body>
+
+</html>
