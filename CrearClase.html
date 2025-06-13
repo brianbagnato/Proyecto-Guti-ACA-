@@ -10,6 +10,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         #btnAgregarAlumno {
             background-color: gray;
@@ -66,6 +67,13 @@
             gap: 10px;
             margin-top: 20px;
         }
+
+        /* NUEVA ADICIÓN: Estilos para el input de archivo (oculto) */
+        #inputArchivoImportar {
+            display: none;
+        }
+
+        /* FIN NUEVA ADICIÓN */
     </style>
 </head>
 
@@ -94,6 +102,8 @@
         <div class="botones-finales">
             <button id="btnGuardar">GUARDAR</button>
             <button id="btnImportar">IMPORTAR</button>
+            <input type="file" id="inputArchivoImportar"
+                accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
         </div>
     </div>
 
@@ -143,6 +153,11 @@
         const btnConfirmarSalida = document.getElementById('confirmarSalida');
         const btnCancelarSalida = document.getElementById('cancelarSalida');
 
+        // NUEVA ADICIÓN: Elementos para la importación
+        const btnImportar = document.getElementById('btnImportar');
+        const inputArchivoImportar = document.getElementById('inputArchivoImportar');
+        // FIN NUEVA ADICIÓN
+
         // Detectar edición desde URL
         function obtenerParametro(nombre) {
             const url = new URL(window.location.href);
@@ -171,6 +186,7 @@
             const spanNombre = document.createElement('span');
             spanNombre.textContent = nombre;
             spanNombre.className = 'nombre-alumno';
+            // MODIFICACIÓN: Asegurarse de que el índice se actualice correctamente en la UI
             spanNombre.dataset.index = index;
 
             const acciones = document.createElement('div');
@@ -185,7 +201,8 @@
             iconoEditar.style.width = '20px';
             iconoEditar.style.height = '20px';
             btnEditar.appendChild(iconoEditar);
-            btnEditar.onclick = () => editarAlumno(spanNombre);
+            // MODIFICACIÓN: Pasar el span y el índice al editarAlumno
+            btnEditar.onclick = () => editarAlumno(spanNombre, index);
 
             const btnEliminar = document.createElement('button');
             btnEliminar.title = "Eliminar alumno";
@@ -214,7 +231,8 @@
             alumnosTemp.forEach((nombre, index) => crearAlumnoUI(nombre, index));
         }
 
-        function editarAlumno(span) {
+        // MODIFICACIÓN: editarAlumno ahora recibe el índice
+        function editarAlumno(span, originalIndex) {
             const originalNombre = span.textContent;
             const contenedor = span.parentElement;
 
@@ -237,14 +255,10 @@
             btnAceptar.onclick = () => {
                 const nuevoNombre = input.value.trim();
                 if (nuevoNombre !== '') {
-                    span.textContent = nuevoNombre;
-                    const index = parseInt(span.dataset.index, 10);
-                    if (!isNaN(index)) {
-                        alumnosTemp[index] = nuevoNombre;
-                        isDirty = true;
-                    }
+                    alumnosTemp[originalIndex] = nuevoNombre; // Usa originalIndex
+                    isDirty = true;
                 }
-                restaurarVista(span, input, acciones);
+                restaurarVista(span, input, acciones, originalIndex); // Pasa originalIndex
             };
 
             const btnCancelar = document.createElement('button');
@@ -255,7 +269,7 @@
             iconoCancelar.style.width = '20px';
             iconoCancelar.style.height = '20px';
             btnCancelar.appendChild(iconoCancelar);
-            btnCancelar.onclick = () => restaurarVista(span, input, acciones);
+            btnCancelar.onclick = () => restaurarVista(span, input, acciones, originalIndex); // Pasa originalIndex
 
             contenedor.insertBefore(input, span);
             span.style.display = 'none';
@@ -265,7 +279,8 @@
             acciones.appendChild(btnCancelar);
         }
 
-        function restaurarVista(span, input, acciones) {
+        // MODIFICACIÓN: restaurarVista ahora recibe el índice (aunque no lo use directamente)
+        function restaurarVista(span, input, acciones, index) {
             input.remove();
             span.style.display = '';
             actualizarListaUI();
@@ -288,7 +303,11 @@
             const alumnoPendiente = inputAlumno.value.trim();
 
             if (!nombreClase || !curso) {
-                alert('Nombre de clase y curso son obligatorios');
+                Swal.fire({
+                    icon: 'warning',
+                    title: '¡Atención!',
+                    text: 'El nombre de la clase y el curso son obligatorios.'
+                });
                 return;
             }
 
@@ -313,20 +332,16 @@
             localStorage.setItem('clases', JSON.stringify(clasesGuardadas));
             isDirty = false;
 
-            // --- MODIFICACIÓN AQUÍ ---
-            // Muestra una alerta de éxito y luego redirige
             Swal.fire({
                 title: '¡Clase Guardada!',
                 text: 'La clase ha sido guardada correctamente.',
                 icon: 'success',
-                timer: 2000, // La alerta se cierra automáticamente después de 2 segundos
-                showConfirmButton: false, // Oculta el botón de "OK"
-                allowOutsideClick: false // No permite cerrar haciendo clic afuera
+                timer: 2000,
+                showConfirmButton: false,
+                allowOutsideClick: false
             }).then(() => {
-                // Esta parte se ejecuta DESPUÉS de que la alerta se cierra
                 window.location.href = 'clases.html';
             });
-            // --- FIN DE LA MODIFICACIÓN ---
         });
 
         // Confirmación al salir
@@ -355,6 +370,81 @@
         btnConfirmarSalida.addEventListener('click', () => {
             window.location.href = 'clases.html';
         });
+
+
+        // NUEVA ADICIÓN: Lógica para el botón de importar
+        btnImportar.addEventListener('click', () => {
+            inputArchivoImportar.click(); // Simula un clic en el input de archivo oculto
+        });
+
+        inputArchivoImportar.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    // Asumimos que la primera hoja es la que contiene los alumnos
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+
+                    // Convertimos la hoja a un array de arrays (filas y columnas)
+                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    if (json.length === 0) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de Importación',
+                            text: 'El archivo Excel/CSV está vacío o no tiene el formato esperado.'
+                        });
+                        return;
+                    }
+
+                    let alumnosImportados = [];
+                    // Asumimos que los nombres de los alumnos están en la primera columna (índice 0)
+                    // Saltamos la primera fila si es un encabezado (ej. "Nombre de Alumno")
+                    for (let i = 0; i < json.length; i++) {
+                        const row = json[i];
+                        if (row[0] && typeof row[0] === 'string' && row[0].trim() !== '') {
+                            alumnosImportados.push(row[0].trim());
+                        }
+                    }
+
+                    if (alumnosImportados.length > 0) {
+                        alumnosTemp = [...new Set([...alumnosTemp, ...alumnosImportados])]; // Agrega y elimina duplicados
+                        actualizarListaUI();
+                        isDirty = true;
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Importación Exitosa!',
+                            text: `${alumnosImportados.length} alumnos importados.`,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: '¡Importación Parcial!',
+                            text: 'No se encontraron nombres de alumnos válidos en la primera columna del archivo.',
+                        });
+                    }
+                };
+
+                reader.onerror = (error) => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error al leer el archivo',
+                        text: 'Hubo un problema al cargar el archivo. Inténtalo de nuevo.'
+                    });
+                    console.error('Error al leer el archivo:', error);
+                };
+
+                reader.readAsArrayBuffer(file); // Lee el archivo como un ArrayBuffer para SheetJS
+            }
+        });
+        // FIN NUEVA ADICIÓN
     </script>
 </body>
 
