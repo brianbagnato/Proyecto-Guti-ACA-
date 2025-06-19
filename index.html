@@ -2,101 +2,187 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="./img/favicon.png">
-    <title>Presente</title>
-    <link rel="stylesheet" href="style.css" />
-    <!-- Agregar CSS de Bootstrap -->
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bienvenida</title>
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">
 
-<body class="fondo-clases">
-    <h2>Clases</h2>
+    <style>
+        /* ESTILOS PRINCIPALES - EVITAR FLICKERING */
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: #2e3b5e;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
 
-    <div class="contenedor-tarjetas">
-        <!-- Las tarjetas se generarán aquí dinámicamente -->
-    </div>
+        .splash-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            z-index: 9999;
+            background-color: #2e3b5e;
+            /* Mismo color que el fondo */
+        }
 
-    <a href="CrearClase.html">
-        <button class="btn-nueva-clase">+ NUEVA CLASE</button>
-    </a>
+        .splash-container.hidden {
+            opacity: 0;
+            transform: scale(0.98);
+            pointer-events: none;
+        }
 
-    <!-- Modal de confirmación Bootstrap -->
-    <div class="modal fade" id="modalConfirmarEliminar" tabindex="-1" aria-labelledby="modalEliminarLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalEliminarLabel">Confirmar eliminación</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    ¿Está seguro que desea eliminar esta clase?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">Eliminar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+        .logo {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 30px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            /* SVG embebido como fallback - reemplaza con tu logo */
+            background-image: url('./img/LOGOSISI.png');
+        }
 
-    <!-- Bootstrap JS Bundle (incluye Popper) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        .mensaje {
+            color: white;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            max-width: 80%;
+            line-height: 1.4;
+            margin-bottom: 40px;
+        }
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const contenedor = document.querySelector('.contenedor-tarjetas');
-            let clases = JSON.parse(localStorage.getItem('clases')) || [];
-            let idAEliminar = null;
+        /* Animación de carga discreta */
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
 
-            function renderClases() {
-                contenedor.innerHTML = '';
-                clases.forEach(clase => {
-                    const tarjeta = document.createElement('div');
-                    tarjeta.className = 'tarjeta-clase';
-                    tarjeta.innerHTML = `
-                        <p><strong>${clase.nombre}</strong><br />${clase.curso}</p>
-                        <div class="acciones-clase">
-                            <a href="tomarAsistencia.html?claseId=${clase.id}">
-                                <button>Tomar asistencia</button>
-                            </a>
-                            <a href="registros.html?claseId=${clase.id}">
-                                <button>Registros anteriores</button>
-                            </a>
-                        </div>
-                        <a href="CrearClase.html?editar=${clase.id}" class="configurar-clase">
-                            <img src="./img/config-icon.png" alt="Configurar" />
-                        </a>
-                        <button class="btn-eliminar-clase" title="Eliminar clase" data-id="${clase.id}">🗑️</button>
-                    `;
-                    contenedor.appendChild(tarjeta);
-                });
+        .loader.visible {
+            opacity: 1;
+        }
 
-                // Asignar evento a los botones de eliminar
-                document.querySelectorAll('.btn-eliminar-clase').forEach(btn => {
-                    btn.addEventListener('click', function () {
-                        idAEliminar = this.getAttribute('data-id');
-                        const modal = new bootstrap.Modal(document.getElementById('modalConfirmarEliminar'));
-                        modal.show();
-                    });
-                });
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
             }
 
-            // Confirmar eliminación
-            document.getElementById('btnConfirmarEliminar').addEventListener('click', function () {
-                if (idAEliminar !== null) {
-                    clases = clases.filter(c => c.id != idAEliminar);
-                    localStorage.setItem('clases', JSON.stringify(clases));
-                    renderClases();
-                    idAEliminar = null;
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalConfirmarEliminar'));
-                    modal.hide();
-                }
-            });
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
 
-            renderClases();
-        });
+<body>
+    <!-- Contenedor de bienvenida -->
+    <div class="splash-container" id="splashContainer">
+        <div class="logo" id="appLogo"></div>
+        <p class="mensaje">¡Hola, profe!<br>¡Bienvenido a "Acá"!</p>
+        <div class="loader" id="loader"></div>
+    </div>
+
+    <!-- DOM principal vacío (se cargará después) -->
+    <div id="appContent" style="display: none;"></div>
+
+    <script>
+        // Configuraciones
+        const config = {
+            splashTime: 2500,    // Tiempo total que muestra la splash (ms)
+            fadeTime: 800,       // Duración del fade-out (ms)
+            nextPage: "clases.html"  // Página destino
+        };
+
+        // Elementos del DOM
+        const splashContainer = document.getElementById('splashContainer');
+        const loader = document.getElementById('loader');
+
+        // Esconder la splash screen nativa de Cordova
+        function hideNativeSplashScreen() {
+            if (navigator.splashscreen && navigator.splashscreen.hide) {
+                navigator.splashscreen.hide();
+            }
+        }
+
+        // Mostrar nuestra splash screen personalizada
+        function showCustomSplash() {
+            splashContainer.style.display = 'flex';
+
+            // Mostrar loader después de 1.5 segundos
+            setTimeout(() => {
+                loader.classList.add('visible');
+            }, 1500);
+        }
+
+        // Transición a la siguiente pantalla
+        function transitionToNextPage() {
+            // Primero: efecto de fade out
+            splashContainer.classList.add('hidden');
+
+            // Esperar a que termine la transición CSS
+            setTimeout(() => {
+                // Ocultar completamente
+                splashContainer.style.display = 'none';
+
+                // Redirigir
+                window.location.href = config.nextPage;
+            }, config.fadeTime);
+        }
+
+        // Manejar el evento deviceready de Cordova
+        document.addEventListener('deviceready', () => {
+            console.log('Cordova listo');
+            hideNativeSplashScreen();
+            showCustomSplash();
+
+            // Iniciar secuencia de transición
+            setTimeout(transitionToNextPage, config.splashTime);
+        }, false);
+
+        // Fallback para desarrollo (sin Cordova)
+        if (typeof cordova === 'undefined') {
+            console.warn('Cordova no detectado - Modo desarrollo activado');
+
+            // Simular evento deviceready después de 1s
+            setTimeout(() => {
+                showCustomSplash();
+
+                // Mostrar mensaje de advertencia
+                const mensaje = document.querySelector('.mensaje');
+                mensaje.innerHTML += '<br><small>(Modo desarrollo sin Cordova)</small>';
+
+                // Transición después del tiempo configurado
+                setTimeout(transitionToNextPage, config.splashTime);
+            }, 500);
+        }
+
+        // Prevenir comportamiento por defecto en links
+        document.addEventListener('click', function (e) {
+            e.preventDefault();
+            return false;
+        }, true);
     </script>
 </body>
 

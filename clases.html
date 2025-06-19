@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="./img/favicon.png">
+    <title>Presente</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="fondo-clases">
+    <h2>Clases</h2>
+
+    <div class="contenedor-tarjetas"></div>
+
+    <a href="CrearClase.html">
+        <button class="btn-nueva-clase">+ NUEVA CLASE</button>
+    </a>
+
+    <div class="modal" id="modalConfirmarEliminar">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h3>Confirmar eliminación</h3>
+                <button class="cerrar-modal" onclick="cerrarModal()">&times;</button>
+            </div>
+            <p>¿Está seguro que desea eliminar esta clase?</p>
+            <div class="botones-finales">
+                <button onclick="cerrarModal()">Cancelar</button>
+                <button id="btnConfirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let idAEliminar = null;
+        const contenedor = document.querySelector('.contenedor-tarjetas');
+
+        function renderClases() {
+            contenedor.innerHTML = '';
+            let clases = JSON.parse(localStorage.getItem('clases')) || [];
+
+            clases.forEach(clase => {
+                const tarjeta = document.createElement('div');
+                tarjeta.className = 'tarjeta-clase';
+                tarjeta.innerHTML = `
+                    <p><strong>${clase.nombre}</strong><br />${clase.curso}</p>
+                    <div class="acciones-clase">
+                        <a href="tomarAsistencia.html?claseId=${clase.id}"><button>Tomar asistencia</button></a>
+                        <a href="registros.html?claseId=${clase.id}"><button>Registros anteriores</button></a>
+                    </div>
+                    <a href="CrearClase.html?editar=${clase.id}" class="configurar-clase">
+                        <img src="./img/config-icon.png" alt="Configurar" />
+                    </a>
+                    <button class="btn-eliminar-clase" data-id="${clase.id}">🗑️</button>
+                `;
+                contenedor.appendChild(tarjeta);
+            });
+
+            document.querySelectorAll('.btn-eliminar-clase').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    idAEliminar = this.dataset.id;
+                    document.getElementById('modalConfirmarEliminar').classList.add('visible');
+                });
+            });
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalConfirmarEliminar').classList.remove('visible');
+        }
+
+        document.getElementById('btnConfirmarEliminar').addEventListener('click', () => {
+            let clases = JSON.parse(localStorage.getItem('clases')) || [];
+            clases = clases.filter(c => c.id != idAEliminar);
+            localStorage.setItem('clases', JSON.stringify(clases));
+            renderClases();
+            cerrarModal();
+        });
+
+        document.addEventListener('DOMContentLoaded', renderClases);
+    </script>
+</body>
+
+</html>
