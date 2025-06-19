@@ -14,13 +14,68 @@
             margin-top: 20px;
             color: #fff;
         }
+
+        /* ****************************************************************** */
+        /* INICIO DE ESTILOS AÑADIDOS POR MI (PARA MANEJAR TEXTOS LARGOS) */
+
+        /* Estilos para el título de la clase en el encabezado (h1 #tituloClase) */
+        #tituloClase {
+            white-space: nowrap;
+            /* Mi estilo: Evita que el texto salte a la siguiente línea */
+            overflow: hidden;
+            /* Mi estilo: Oculta el texto que se desborda */
+            text-overflow: ellipsis;
+            /* Mi estilo: Añade "..." al final del texto recortado */
+            /* Mi estilo: Necesario para que overflow y text-overflow funcionen */
+            display: inline-block;
+            /* Mi estilo: Asegura que ocupe el ancho adecuado, puedes ajustar el 80% si necesitas más/menos espacio */
+            max-width: calc(100% - 80px);
+            /* Mi estilo: Deja espacio para el botón de retroceso */
+            vertical-align: middle;
+            /* Mi estilo: Alinea verticalmente con el botón */
+            margin: 0;
+            /* Mi estilo: Reinicia márgenes para un control preciso */
+            padding-left: 10px;
+            /* Mi estilo: Pequeño padding si es necesario por el botón */
+        }
+
+        /* Ajuste para el contenedor del encabezado si el h1 es inline-block */
+        .app-header {
+            display: flex;
+            /* Mi estilo: Usa flexbox para alinear el botón y el título */
+            align-items: center;
+            /* Mi estilo: Centra verticalmente los elementos */
+            padding: 10px;
+            /* Mi estilo: Añade un poco de padding al header */
+            position: relative;
+            /* Mi estilo: Si el back-btn es absoluto, su padre debe ser relativo */
+        }
+
+        /* Estilos para el nombre del alumno dentro de cada tarjeta de asistencia */
+        .card .name {
+            white-space: nowrap;
+            /* Mi estilo: Evita saltos de línea para el nombre del alumno */
+            overflow: hidden;
+            /* Mi estilo: Oculta el texto que se desborda */
+            text-overflow: ellipsis;
+            /* Mi estilo: Añade "..." al final del nombre recortado */
+            display: block;
+            /* Mi estilo: Necesario para que overflow y text-overflow funcionen */
+            max-width: 100%;
+            /* Mi estilo: Asegura que ocupe el ancho disponible en su contenedor */
+            /* MANTÉN TUS ESTILOS DE FUENTE Y COLOR ORIGINALES AQUÍ */
+            /* Por ejemplo, el tamaño de fuente y color que ya tenga .name en style.css */
+        }
+
+        /* FIN DE ESTILOS AÑADIDOS POR MI (PARA MANEJAR TEXTOS LARGOS) */
+        /* ****************************************************************** */
     </style>
 </head>
 
 <body>
     <header class="app-header">
         <button class="back-btn" onclick="volverAClases()">&larr;</button>
-        <h1 id="tituloClase">Matemáticas - 1°A</h1>
+        <h2 id="tituloClase">Matemáticas - 1°A</h2>
     </header>
     <div class="app-container">
         <p class="date" id="fechaActual"></p>
@@ -35,19 +90,19 @@
     </div>
 
     <script>
-        // Función para obtener parámetro de la URL
+        // Función para obtener parámetro de la URL (ESTO YA ESTABA)
         function getQueryParam(param) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
         }
 
-        // Función para formatear fecha
+        // Función para formatear fecha (ESTO YA ESTABA)
         function formatearFecha(fecha) {
             const opciones = { day: '2-digit', month: '2-digit', year: 'numeric' };
             return fecha.toLocaleDateString('es-ES', opciones);
         }
 
-        // Función para generar las tarjetas de alumnos
+        // Función para generar las tarjetas de alumnos (ESTO YA ESTABA)
         function generarTarjetasAlumnos(alumnos) {
             const container = document.getElementById('listaAlumnosContainer');
             container.innerHTML = '';
@@ -56,34 +111,33 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-            <div class="photo">👤</div>
-            <div class="info">
-                <div class="name">${alumno}</div>
-                <div class="radios">
-                    <div class="radio-group">
-                        <label for="alumno${index}_p">P</label>
-                        <input type="radio" id="alumno${index}_p" name="asistencia${index}" value="P">
-                    </div>
-                    <div class="radio-group">
-                        <label for="alumno${index}_a">A</label>
-                        <input type="radio" id="alumno${index}_a" name="asistencia${index}" value="A">
-                    </div>
-                    <div class="radio-group">
-                        <label for="alumno${index}_t">T</label>
-                        <input type="radio" id="alumno${index}_t" name="asistencia${index}" value="T">
+                <div class="photo">👤</div>
+                <div class="info">
+                    <div class="name">${alumno}</div> <div class="radios">
+                        <div class="radio-group">
+                            <label for="alumno${index}_p">P</label>
+                            <input type="radio" id="alumno${index}_p" name="asistencia${index}" value="P">
+                        </div>
+                        <div class="radio-group">
+                            <label for="alumno${index}_a">A</label>
+                            <input type="radio" id="alumno${index}_a" name="asistencia${index}" value="A">
+                        </div>
+                        <div class="radio-group">
+                            <label for="alumno${index}_t">T</label>
+                            <input type="radio" id="alumno${index}_t" name="asistencia${index}" value="T">
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+                `;
                 container.appendChild(card);
             });
         }
 
-        // Función principal al cargar la página
+        // Función principal al cargar la página (ESTO YA ESTABA)
         document.addEventListener('DOMContentLoaded', () => {
             const claseId = getQueryParam('claseId');
             if (!claseId) {
-                // MODIFICACIÓN: Usar SweetAlert para alertas
+                // MODIFICACIÓN: Usar SweetAlert para alertas (ESTO YA ESTABA)
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -96,11 +150,11 @@
                 return;
             }
 
-            // Obtener la clase del localStorage
+            // Obtener la clase del localStorage (ESTO YA ESTABA)
             const clases = JSON.parse(localStorage.getItem('clases')) || [];
             const clase = clases.find(c => c.id == claseId);
             if (!clase) {
-                // MODIFICACIÓN: Usar SweetAlert para alertas
+                // MODIFICACIÓN: Usar SweetAlert para alertas (ESTO YA ESTABA)
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -114,23 +168,25 @@
             }
 
             // Mostrar datos de la clase
+            // Mi lógica: El título de la clase y el curso se combinan aquí. 
+            // El CSS se encargará de recortarlo si es muy largo.
             document.getElementById('tituloClase').textContent = `${clase.nombre} - ${clase.curso}`;
 
-            // Mostrar fecha actual
+            // Mostrar fecha actual (ESTO YA ESTABA)
             const fechaActual = new Date();
             document.getElementById('fechaActual').textContent = formatearFecha(fechaActual);
 
-            // Generar tarjetas de alumnos
+            // Generar tarjetas de alumnos (ESTO YA ESTABA)
             generarTarjetasAlumnos(clase.alumnos);
         });
 
-        // ✅ Marca todos los radios con un valor dado (P, A o T)
+        // ✅ Marca todos los radios con un valor dado (P, A o T) (ESTO YA ESTABA)
         function marcarTodos(valor) {
             const radios = document.querySelectorAll(`input[type="radio"][value="${valor}"]`);
             radios.forEach(radio => radio.checked = true);
         }
 
-        // ✅ Cierra el registro y guarda la asistencia
+        // ✅ Cierra el registro y guarda la asistencia (ESTO YA ESTABA)
         function cerrarRegistro() {
             const radios = document.querySelectorAll('input[type="radio"]');
             const grupos = {};
@@ -156,12 +212,12 @@
             // La redirección se hará dentro de guardarAsistencia() ahora
         }
 
-        // Volver a la página de clases (ya no se llama directamente desde cerrarRegistro)
+        // Volver a la página de clases (ya no se llama directamente desde cerrarRegistro) (ESTO YA ESTABA)
         function volverAClases() {
             window.location.href = 'clases.html';
         }
 
-        // Guardar la asistencia en localStorage
+        // Guardar la asistencia en localStorage (ESTO YA ESTABA)
         function guardarAsistencia() {
             const claseId = getQueryParam('claseId');
             if (!claseId) {
@@ -208,7 +264,7 @@
             const clave = `asistencia_${claseId}_${fecha.replace(/-/g, '_')}`; // Asegura YYYY_MM_DD
             localStorage.setItem(clave, JSON.stringify(registros));
 
-            // MODIFICACIÓN: Mostrar mensaje de éxito con SweetAlert2
+            // MODIFICACIÓN: Mostrar mensaje de éxito con SweetAlert2 (ESTO YA ESTABA)
             Swal.fire({
                 title: 'Registro Cerrado',
                 text: `Asistencia del ${formatearFecha(new Date())} guardada correctamente.`,

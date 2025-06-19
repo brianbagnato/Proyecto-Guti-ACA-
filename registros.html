@@ -7,18 +7,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <style>
-        h1 {
-            text-align: center;
-            margin-top: 20px;
-            color: #fff;
+        .app-header {
+            display: flex;
+            /* Mi estilo: Usa flexbox para alinear el botón y el título */
+            align-items: center;
+            /* Mi estilo: Centra verticalmente los elementos */
+            padding: 10px;
+            /* Mi estilo: Añade un poco de padding al header */
+            position: relative;
+            /* Mi estilo: Si el back-btn es absoluto, su padre debe ser relativo */
         }
     </style>
 </head>
 
 <body class="fondo-registros">
-    <div class="header">
-        <a href="clases.html" class="back-arrow">&larr;</a>
-        <h1>Registros de Asistencia</h1>
+    <div class="app-header">
+        <button class="back-btn" onclick="volverAClases()">&larr;</button>
+        <!-- Mi estilo: Botón de retroceso -->
+        <h2>Registros de Asistencia</h2>
     </div>
 
     <div class="busqueda-fecha">
@@ -279,6 +285,10 @@
                     </div>
                 `;
             }
+        }
+        // Si necesitas la función volverAClases, defínela correctamente:
+        function volverAClases() {
+            window.location.href = "clases.html";
         }
     </script>
 </body>

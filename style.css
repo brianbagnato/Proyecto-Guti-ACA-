@@ -29,6 +29,7 @@ body {
 body {
     font-family: sans-serif;
     background-color: #a2b5c9;
+    /* Color de fondo general */
 }
 
 /* Títulos */
@@ -54,7 +55,7 @@ button {
 
 /**
  * =========================================
- * HEADER
+ * HEADER (GLOBAL - APLICA A CLASES.HTML Y OTROS)
  * =========================================
  */
 
@@ -74,9 +75,33 @@ button {
     text-decoration: none;
 }
 
+/* Mi modificación: Estilos para el botón de eliminar clase en CrearClase.html */
+.delete-class-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    z-index: 10;
+}
+
+.delete-class-button img {
+    width: 24px;
+    height: 24px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.delete-class-button:hover img {
+    opacity: 1;
+}
+
+
 /**
  * =========================================
- * FORMULARIOS
+ * FORMULARIOS (EN CREARCLASE.HTML)
  * =========================================
  */
 
@@ -124,7 +149,7 @@ input[type="text"] {
 
 /**
  * =========================================
- * LISTA DE ALUMNOS
+ * LISTA DE ALUMNOS (EN CREAR CLASE)
  * =========================================
  */
 
@@ -171,7 +196,7 @@ input[type="text"] {
 
 /**
  * =========================================
- * BOTONES FINALES
+ * BOTONES FINALES (EN CREAR CLASE)
  * =========================================
  */
 
@@ -268,7 +293,7 @@ input[type="text"] {
 
 /**
  * =========================================
- * PÁGINA: CLASES
+ * PÁGINA: CLASES (LISTADO)
  * =========================================
  */
 
@@ -299,12 +324,24 @@ input[type="text"] {
 .tarjeta-clase p {
     margin: 0;
     color: #5b7b95;
+    /* Mi adición: Estas propiedades aseguran que el texto del curso se recorte correctamente */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    max-width: 100%;
 }
 
 .tarjeta-clase p strong {
     color: #2f3b5a;
     font-size: 20px;
     font-weight: bold;
+    /* Mi adición: Estas propiedades aseguran que el nombre de la clase se recorte correctamente */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    max-width: 100%;
 }
 
 .acciones-clase {
@@ -418,16 +455,22 @@ input[type="text"] {
     height: 100%;
     margin: 0 auto;
     padding: 0 12px;
+    /* Mi estilo: Fondo para tomar asistencia */
+    background-color: #a2b5c9;
+    /* Es el mismo que el body global, pero lo pongo explícito */
 }
 
+/* Mi modificación: Ajusto el header de tomar asistencia para un mejor layout del título */
 .app-header {
     display: flex;
+    /* Mi estilo: Para alinear el botón y el título */
     align-items: center;
-    gap: 10px;
-    width: calc(100% + 24px);
+    /* Mi estilo: Centra verticalmente los elementos */
+    /* width: calc(100% + 24px); Removido para que el padding del header funcione bien */
     margin: 0 -12px;
-    /* Compensa el padding del contenedor padre */
+    /* Mi estilo: Compensa el padding del contenedor padre app-container */
     padding: 16px;
+    /* Mi estilo: Padding consistente */
     background-color: #1f2b4c;
     color: #FFF;
     font-size: 18px;
@@ -445,6 +488,16 @@ input[type="text"] {
 .app-header h1 {
     margin: 0;
     font-weight: normal;
+    /* Mi adición: Estilos para recortar el título largo de la clase */
+    white-space: nowrap;
+    /* Mi estilo: Evita que el texto salte de línea */
+    overflow: hidden;
+    /* Mi estilo: Oculta el texto que se desborda */
+    text-overflow: ellipsis;
+    /* Mi estilo: Añade "..." al final */
+    flex-grow: 1;
+    /* Mi estilo: Permite que el título ocupe el espacio restante */
+    /* max-width: calc(100% - 80px); No es necesario con flex-grow */
 }
 
 .date {
@@ -470,7 +523,7 @@ input[type="text"] {
     display: flex;
     align-items: center;
     width: 100%;
-    max-width: 393px;
+    /* max-width: 393px; Removido, 100% es suficiente dentro de app-container */
     padding: 15px;
     background-color: #2d3a64;
     color: white;
@@ -502,12 +555,24 @@ input[type="text"] {
     display: flex;
     flex-direction: column;
     flex: 1;
+    /* Mi estilo: Permite que la info ocupe el espacio restante */
+    /* max-width: calc(100% - 85px); Removido, flex: 1 se encarga de esto */
 }
 
 .name {
     margin-bottom: 10px;
     font-size: 18px;
     font-weight: bold;
+    /* Mi adición: Estilos para recortar el nombre largo del alumno */
+    white-space: nowrap;
+    /* Mi estilo: Evita que el texto salte de línea */
+    overflow: hidden;
+    /* Mi estilo: Oculta el texto que se desborda */
+    text-overflow: ellipsis;
+    /* Mi estilo: Añade "..." al final */
+    display: block;
+    /* Mi estilo: Asegura que las propiedades de ancho y desbordamiento funcionen */
+    /* max-width: 100%; ya está implícito con flex: 1 en .info y display: block */
 }
 
 /* Inputs de Radio para Asistencia */
