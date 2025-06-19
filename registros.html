@@ -6,6 +6,8 @@
     <title>Registros de Asistencia</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <!-- Mi adición: Incluyo jsPDF para la generación de PDFs (esto ya estaba) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         .app-header {
             display: flex;
@@ -17,13 +19,307 @@
             position: relative;
             /* Mi estilo: Si el back-btn es absoluto, su padre debe ser relativo */
         }
+
+        /* ****************************************************************** */
+        /* INICIO DE ESTILOS AÑADIDOS POR MI (PARA LOS INDICADORES P, A, T EN EL MODAL) */
+        /* Estilo base para el span que mostrará P, A, T */
+        .estado-indicador {
+            font-weight: bold;
+            /* Mi estilo: Texto en negrita */
+            margin-left: 8px;
+            /* Mi estilo: Espacio a la izquierda del nombre */
+            padding: 2px 6px;
+            /* Mi estilo: Relleno para que no se vea pegado */
+            border-radius: 4px;
+            /* Mi estilo: Bordes ligeramente redondeados */
+            font-size: 0.9em;
+            /* Mi estilo: Tamaño de fuente un poco más pequeño */
+            min-width: 25px;
+            /* Mi estilo: Ancho mínimo para consistencia */
+            text-align: center;
+            /* Mi estilo: Centra el texto P, A, T */
+            display: inline-block;
+            /* Mi estilo: Para que padding y min-width funcionen */
+            flex-shrink: 0;
+            /* Mi adición: Asegura que el indicador no se encoja */
+        }
+
+        /* Color para estado "Presente" */
+        .estado-presente {
+            background-color: #28a745;
+            /* Mi estilo: Verde */
+            color: white;
+            /* Mi estilo: Texto blanco para contraste */
+        }
+
+        /* Color para estado "Ausente" */
+        .estado-ausente {
+            background-color: #dc3545;
+            /* Mi estilo: Rojo */
+            color: white;
+            /* Mi estilo: Texto blanco para contraste */
+        }
+
+        /* Color para estado "Tardanza" */
+        .estado-tardanza {
+            background-color: #ffc107;
+            /* Mi estilo: Amarillo */
+            color: #343a40;
+            /* Mi estilo: Texto oscuro para contraste */
+        }
+
+        /* Estilo para los elementos de la lista en el modal de detalles */
+        #lista-detalles li {
+            display: flex;
+            /* Mi estilo: Usa flexbox para alinear nombre y estado */
+            justify-content: space-between;
+            /* Mi estilo: Distribuye el espacio entre nombre y estado */
+            align-items: center;
+            /* Mi estilo: Centra verticalmente nombre y estado */
+            padding: 8px 0;
+            /* Mi estilo: Relleno vertical */
+            border-bottom: 1px solid #eee;
+            /* Mi estilo: Separador entre elementos */
+            color: #333;
+            /* Mi estilo: Color de texto general para la lista */
+            font-size: 1.1em;
+            /* Mi estilo: Tamaño de fuente de la lista */
+            min-width: 0;
+            /* Mi adición: CRÍTICO, permite que los hijos flex se recorten */
+        }
+
+        /* Mi adición: Estilo específico para el span del nombre del alumno dentro del LI */
+        #lista-detalles li span:first-child {
+            /* Selecciona el primer span dentro del li (el nombre) */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+            /* Mi adición: Permite que el nombre ocupe el espacio restante */
+            min-width: 0;
+            /* Mi adición: CRÍTICO para que el text-overflow funcione dentro de flex */
+        }
+
+        /* FIN DE ESTILOS AÑADIDOS POR MI (PARA LOS INDICADORES P, A, T EN EL MODAL) */
+        /* ****************************************************************** */
+
+        /* ****************************************************************** */
+        /* INICIO DE ESTILOS AÑADIDOS POR MI (PARA MEJORAR EL MODAL DE DETALLES) */
+
+        /* Ajuste para el encabezado del modal */
+        #modal .modal-header {
+            background-color: #1f2b4c;
+            color: white;
+            padding: 10px 15px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            margin-bottom: 0;
+            display: flex;
+            /* Mi adición: Asegura flexbox para el header */
+            justify-content: space-between;
+            /* Mi adición: Separa título y botón */
+            align-items: center;
+            /* Mi adición: Centra verticalmente */
+        }
+
+        /* Ajuste para el título dentro del modal header */
+        #modal .modal-header h3 {
+            color: white;
+            text-align: center;
+            /* Mi adición: Asegura que el título esté centrado */
+            flex-grow: 1;
+            /* Mi adición: Permite que el título ocupe el espacio restante */
+            margin: 0;
+            white-space: nowrap;
+            /* Mi adición: Evita que el título del modal salte de línea */
+            overflow: hidden;
+            /* Mi adición: Oculta el título si se desborda */
+            text-overflow: ellipsis;
+            /* Mi adición: Añade puntos suspensivos al título si se recorta */
+        }
+
+        /* Ajuste para el botón de cerrar modal (X) */
+        #modal .cerrar-modal {
+            color: red;
+            /* Mi adición: Color rojo para la 'X' */
+            position: relative;
+            top: -2px;
+            /* Mi modificación: Mueve la 'X' un poco más arriba y ajusta para centrado visual */
+            font-size: 2rem;
+            /* Mi estilo: Un poco más grande para que sea visible */
+            line-height: 1;
+            /* Mi estilo: Ajusta la altura de línea */
+            padding: 0 5px;
+            /* Mi estilo: Pequeño padding para el clic */
+            background: none;
+            /* Mi adición: Asegura que no tenga fondo */
+            border: none;
+            /* Mi adición: Asegura que no tenga borde */
+            cursor: pointer;
+            /* Mi adición: Mantiene el cursor de puntero */
+            flex-shrink: 0;
+            /* Mi adición: Asegura que la 'X' no se encoja */
+        }
+
+        /* FIN DE ESTILOS AÑADIDOS POR MI (PARA MEJORAR EL MODAL DE DETALLES) */
+        /* ****************************************************************** */
+
+        /* ****************************************************************** */
+        /* INICIO DE ESTILOS AÑADIDOS POR MI (PARA EL BOTÓN "Cerrar" EN EL PIE DEL MODAL) */
+        #modal .modal-footer-button {
+            display: block;
+            /* Mi estilo: Para que ocupe todo el ancho disponible */
+            width: 100%;
+            /* Mi estilo: Ocupa el 100% del ancho del modal-contenido */
+            background-color: #1f2b4c;
+            /* Mi estilo: Color de fondo similar a tus otros botones */
+            color: white;
+            /* Mi estilo: Texto blanco */
+            padding: 10px 20px;
+            /* Mi estilo: Relleno */
+            border-radius: 8px;
+            /* Mi estilo: Bordes redondeados */
+            font-weight: bold;
+            /* Mi estilo: Texto en negrita */
+            cursor: pointer;
+            /* Mi estilo: Cursor de mano */
+            margin-top: 20px;
+            /* Mi estilo: Espacio superior para separarlo de la lista */
+            border: none;
+            /* Mi estilo: Elimina cualquier borde por defecto */
+            text-align: center;
+            /* Mi estilo: Centra el texto del botón */
+        }
+
+        /* FIN DE ESTILOS AÑADIDOS POR MI (PARA EL BOTÓN "Cerrar" EN EL PIE DEL MODAL) */
+        /* ****************************************************************** */
+
+        /* ****************************************************************** */
+        /* INICIO DE ESTILOS AÑADIDOS POR MI (PARA BOTONES DE ACCIONES REESTRUCTURADOS) */
+        /* Estilo para la barra de acciones debajo del título del modal */
+        .modal-actions-bar {
+            display: flex;
+            /* Mi estilo: Alinea los botones horizontalmente */
+            justify-content: center;
+            /* Mi estilo: Centra los botones en la barra */
+            gap: 15px;
+            /* Mi estilo: Espacio entre los botones */
+            padding: 15px 0;
+            /* Mi estilo: Relleno superior e inferior */
+            border-bottom: 1px solid #eee;
+            /* Mi estilo: Separador visual */
+            margin-bottom: 15px;
+            /* Mi estilo: Espacio debajo de la barra */
+            position: relative;
+            /* Mi adición: Necesario para posicionar el menú desplegable */
+        }
+
+        /* Estilo para el botón principal que abre el menú */
+        .action-button-main {
+            background-color: #1f2b4c;
+            /* Mi estilo: Color de fondo como tus headers */
+            color: white;
+            /* Mi estilo: Texto blanco */
+            border: none;
+            border-radius: 8px;
+            /* Mi estilo: Bordes redondeados */
+            padding: 10px 15px;
+            /* Mi estilo: Relleno */
+            font-weight: bold;
+            /* Mi estilo: Negrita */
+            cursor: pointer;
+            display: flex;
+            /* Mi estilo: Para alinear icono y texto */
+            align-items: center;
+            /* Mi estilo: Centra verticalmente */
+            gap: 8px;
+            /* Mi estilo: Espacio entre icono y texto */
+            transition: background-color 0.2s ease;
+            /* Mi estilo: Transición suave */
+        }
+
+        .action-button-main:hover {
+            background-color: #2c3e6b;
+            /* Mi estilo: Color más oscuro al pasar el mouse */
+        }
+
+        .action-button-main svg {
+            width: 20px;
+            /* Mi estilo: Tamaño de los iconos */
+            height: 20px;
+            color: white;
+            /* Mi estilo: Color blanco de los iconos */
+        }
+
+        /* Contenedor del menú de opciones (desplegable) */
+        .menu-opciones-descarga {
+            position: absolute;
+            /* Mi estilo: Posiciona el menú sobre el contenido */
+            background-color: white;
+            /* Mi estilo: Fondo blanco para el menú */
+            border-radius: 8px;
+            /* Mi estilo: Bordes redondeados */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            /* Mi estilo: Sombra */
+            top: calc(100% + 5px);
+            /* Mi estilo: Posición debajo del botón principal + un pequeño espacio */
+            right: 0;
+            /* Mi estilo: Alineado a la derecha del contenedor relativo */
+            z-index: 1001;
+            /* Mi estilo: Asegura que esté por encima de todo */
+            min-width: 220px;
+            /* Mi estilo: Ancho mínimo para las opciones */
+            overflow: hidden;
+            /* Mi estilo: Oculta cualquier desbordamiento */
+            display: none;
+            /* Mi estilo: Oculto por defecto, se muestra con JS */
+            flex-direction: column;
+            /* Mi estilo: Opciones apiladas */
+        }
+
+        .menu-opciones-descarga button {
+            background: none;
+            border: none;
+            color: #1f2b4c;
+            /* Mi estilo: Color de texto oscuro */
+            padding: 10px 15px;
+            /* Mi estilo: Relleno */
+            text-align: left;
+            /* Mi estilo: Texto alineado a la izquierda */
+            cursor: pointer;
+            font-size: 1em;
+            /* Mi estilo: Tamaño de fuente */
+            transition: background-color 0.2s ease;
+            /* Mi estilo: Transición suave */
+            display: flex;
+            /* Mi estilo: Para alinear icono y texto */
+            align-items: center;
+            /* Mi estilo: Centra verticalmente */
+            gap: 10px;
+            /* Mi estilo: Espacio entre icono y texto */
+        }
+
+        .menu-opciones-descarga button:hover {
+            background-color: #f0f0f0;
+            /* Mi estilo: Fondo claro al pasar el mouse */
+        }
+
+        .menu-opciones-descarga button svg {
+            /* Mi estilo: Iconos dentro del menú */
+            width: 18px;
+            height: 18px;
+            color: #1f2b4c;
+            /* Mi estilo: Color de icono oscuro */
+        }
+
+        /* FIN DE ESTILOS AÑADIDOS POR MI (PARA BOTONES DE ACCIONES REESTRUCTURADAS) */
+        /* ****************************************************************** */
     </style>
 </head>
 
 <body class="fondo-registros">
     <div class="app-header">
         <button class="back-btn" onclick="volverAClases()">&larr;</button>
-        <!-- Mi estilo: Botón de retroceso -->
         <h2>Registros de Asistencia</h2>
     </div>
 
@@ -39,14 +335,67 @@
 
     <div id="modal" class="modal">
         <div class="modal-contenido">
-            <h3 id="modal-titulo">Detalles de Asistencia</h3>
+            <div class="modal-header">
+                <h3 id="modal-titulo">Detalles de Asistencia</h3>
+                <!-- El botón de cerrar (X) se mantiene aquí arriba a la derecha -->
+                <button class="cerrar-modal" onclick="cerrarModal()">&times;</button>
+            </div>
+
+            <!-- INICIO DE MODIFICACIÓN: BARRA DE ACCIONES CON BOTÓN PRINCIPAL Y MENÚ -->
+            <div class="modal-actions-bar">
+                <button class="action-button-main" id="btnAccionesRegistro" onclick="toggleShareMenu(event)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="feather feather-share-2">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                    Compartir
+                </button>
+                <!-- Menú de opciones de descarga/compartir -->
+                <div class="menu-opciones-descarga" id="menuOpcionesDescarga">
+                    <button onclick="descargarYCompartir('pdf'); cerrarMenuOpciones();">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="feather feather-file-text">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        Compartir como PDF
+                    </button>
+                    <button onclick="descargarYCompartir('excel'); cerrarMenuOpciones();">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="feather feather-download">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="12 17 12 5 15 8 9 8"></polyline>
+                        </svg>
+                        Compartir como Excel
+                    </button>
+                    <button onclick="compartirRegistroTexto(); cerrarMenuOpciones();">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="feather feather-message-square">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        Compartir como Texto
+                    </button>
+                </div>
+            </div>
+            <!-- FIN DE MODIFICACIÓN -->
             <ul id="lista-detalles"></ul>
-            <button onclick="cerrarModal()">Cerrar</button>
+            <button class="modal-footer-button" onclick="cerrarModal()">Cerrar</button>
         </div>
     </div>
 
     <script>
-        // Datos de ejemplo para demostración
+        // Datos de ejemplo para demostración (ESTO YA ESTABA)
         const demoData = {
             clases: [
                 { id: "1", nombre: "Matemáticas Avanzadas", curso: "10mo A" },
@@ -74,15 +423,11 @@
             }
         };
 
-        // Cargar datos de demostración
+        // Cargar datos de demostración (ESTO YA ESTABA)
         function cargarDatosDemo() {
-            // Solo cargamos los datos de demostración si la clave 'clases' no existe
-            // para evitar sobrescribir las clases del usuario.
             if (!localStorage.getItem('clases')) {
                 localStorage.setItem('clases', JSON.stringify(demoData.clases));
                 for (const [key, value] of Object.entries(demoData.asistencias)) {
-                    // Asegurarse de no sobrescribir asistencias existentes si se quiere mantener una mezcla,
-                    // aunque en este caso, se asume que si no hay 'clases', tampoco hay asistencias.
                     if (!localStorage.getItem(key)) {
                         localStorage.setItem(key, JSON.stringify(value));
                     }
@@ -90,10 +435,9 @@
             }
         }
 
-        // Función para formatear fechas
+        // Función para formatear fechas (ESTO YA ESTABA)
         function formatearFecha(fechaStr) {
             if (!fechaStr) return "";
-            // Manejar formato con guiones bajos
             const partes = fechaStr.includes("_") ? fechaStr.split("_") : fechaStr.split("-");
             if (partes.length >= 3) {
                 const [y, m, d] = partes;
@@ -102,13 +446,13 @@
             return fechaStr;
         }
 
-        // Obtener parámetro de URL
+        // Obtener parámetro de URL (ESTO YA ESTABA)
         function obtenerParametro(nombre) {
             const params = new URLSearchParams(window.location.search);
             return params.get(nombre);
         }
 
-        // Cargar registros desde localStorage
+        // Cargar registros desde localStorage (ESTO YA ESTABA)
         function cargarRegistros() {
             const clases = JSON.parse(localStorage.getItem('clases')) || [];
             const claseIdSeleccionada = obtenerParametro('claseId');
@@ -118,7 +462,7 @@
             let registrosEncontrados = false;
             let todasLasAsistencias = [];
 
-            // Recorrer localStorage para encontrar todas las asistencias
+            // Recorrer localStorage para encontrar todas las asistencias (ESTO YA ESTABA)
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key.startsWith('asistencia_')) {
@@ -126,20 +470,19 @@
                 }
             }
 
-            // Ordenar las asistencias por fecha (las más recientes primero)
+            // Ordenar las asistencias por fecha (las más recientes primero) (ESTO YA ESTABA)
             todasLasAsistencias.sort((a, b) => {
-                const fechaA = a.split('_').slice(2).join(''); // Ej: "2024_05_20" -> "20240520"
+                const fechaA = a.split('_').slice(2).join('');
                 const fechaB = b.split('_').slice(2).join('');
-                return fechaB.localeCompare(fechaA); // Para ordenar de más reciente a más antigua
+                return fechaB.localeCompare(fechaA);
             });
-
 
             todasLasAsistencias.forEach(key => {
                 const partes = key.split('_');
                 const claseId = partes[1];
                 const fecha = partes.slice(2).join('_');
 
-                if (claseIdSeleccionada && claseId !== claseIdSeleccionada) return; // Si hay filtro por claseId, ignorar
+                if (claseIdSeleccionada && claseId !== claseIdSeleccionada) return;
 
                 const clase = clases.find(c => c.id == claseId);
                 if (clase) {
@@ -147,9 +490,9 @@
                     const tarjeta = document.createElement('div');
                     tarjeta.className = 'tarjeta-registro';
                     tarjeta.innerHTML = `
-                        <p>Clase: <strong>${clase.nombre}</strong><br>Curso: ${clase.curso}</p>
-                        <span>${formatearFecha(fecha)}</span>
-                    `;
+                            <p>Clase: <strong>${clase.nombre}</strong><br>Curso: ${clase.curso}</p>
+                            <span>${formatearFecha(fecha)}</span>
+                        `;
                     tarjeta.addEventListener('click', () => mostrarDetalles(key));
                     contenedor.appendChild(tarjeta);
                 }
@@ -162,17 +505,17 @@
                     <h4>No hay registros de asistencia</h4>
                     <p>Cuando tomes asistencia, aparecerán aquí</p>
                 </div>
-            `;
+                `;
             }
         }
 
-        // Mostrar detalles en el modal
+        // Mostrar detalles en el modal (ESTO YA ESTABA)
         function mostrarDetalles(clave) {
             const datos = JSON.parse(localStorage.getItem(clave));
             const lista = document.getElementById('lista-detalles');
             lista.innerHTML = '';
 
-            // Extraer fecha de la clave
+            // Extraer fecha de la clave (ESTO YA ESTABA)
             const partes = clave.split('_');
             const fechaRaw = partes.slice(2).join('_');
             const titulo = document.getElementById('modal-titulo');
@@ -181,16 +524,30 @@
             datos.forEach(a => {
                 const li = document.createElement('li');
 
-                // Determinar color según estado
+                // Determinar la clase CSS para el estado (ESTO YA ESTABA)
                 let estadoClass = '';
-                if (a.estado === 'Presente') estadoClass = 'presente';
-                if (a.estado === 'Ausente') estadoClass = 'ausente';
-                if (a.estado === 'Tardanza') estadoClass = 'tardanza';
+                let estadoTextoCorto = '';
+                let estadoTextoCompleto = '';
+                if (a.estado === 'Presente') {
+                    estadoClass = 'estado-presente';
+                    estadoTextoCorto = 'P';
+                    estadoTextoCompleto = 'Presente';
+                }
+                if (a.estado === 'Ausente') {
+                    estadoClass = 'estado-ausente';
+                    estadoTextoCorto = 'A';
+                    estadoTextoCompleto = 'Ausente';
+                }
+                if (a.estado === 'Tardanza') {
+                    estadoClass = 'estado-tardanza';
+                    estadoTextoCorto = 'T';
+                    estadoTextoCompleto = 'Tardanza';
+                }
 
                 li.innerHTML = `
                 <span>${a.nombre}</span>
-                <span class="estado ${estadoClass}">${a.estado}</span>
-            `;
+                <span class="estado-indicador ${estadoClass}" data-full-status="${estadoTextoCompleto}">${estadoTextoCorto}</span>
+                `;
                 lista.appendChild(li);
             });
 
@@ -198,40 +555,49 @@
             modal.classList.add('visible');
         }
 
-        // Cerrar modal
+        // Cerrar modal (ESTO YA ESTABA)
         function cerrarModal() {
             const modal = document.getElementById('modal');
             modal.classList.remove('visible');
+            // Mi adición: Cierra el menú de opciones al cerrar el modal principal
+            cerrarMenuOpciones();
         }
 
-        // Inicializar
+        // Inicializar (ESTO YA ESTABA)
         document.addEventListener('DOMContentLoaded', () => {
-            // Cargar datos de demostración si la clave 'clases' no existe
-            // Esto asegura que los datos de demostración solo se carguen una vez
-            // al iniciar la aplicación si no hay datos de usuario.
             if (!localStorage.getItem('clases')) {
                 cargarDatosDemo();
             }
 
             cargarRegistros();
 
-            // Event listener para cerrar modal haciendo clic fuera del contenido
             const modal = document.getElementById('modal');
             modal.addEventListener('click', (e) => {
+                // Mi modificación: Solo cierra el modal si el clic es directamente en el fondo
                 if (e.target === modal) {
                     cerrarModal();
                 }
             });
 
-            // Filtrar por fecha
+            // Mi adición: Cierra el menú de opciones si se hace clic fuera de él en el documento
+            document.addEventListener('click', (event) => {
+                const menu = document.getElementById('menuOpcionesDescarga');
+                const btn = document.getElementById('btnAccionesRegistro');
+                // Mi modificación: Asegura que el clic no sea en el botón principal ni dentro del menú
+                if (menu && btn && !menu.contains(event.target) && !btn.contains(event.target)) {
+                    cerrarMenuOpciones();
+                }
+            });
+
+
             const inputFecha = document.getElementById('fecha');
             inputFecha.addEventListener('change', () => {
-                const fechaFiltro = inputFecha.value.replace(/-/g, '_'); // Convertir YYYY-MM-DD a YYYY_MM_DD
+                const fechaFiltro = inputFecha.value.replace(/-/g, '_');
                 filtrarRegistrosPorFecha(fechaFiltro);
             });
         });
 
-        // NUEVA FUNCIÓN: Filtrar registros por fecha
+        // NUEVA FUNCIÓN: Filtrar registros por fecha (ESTO YA ESTABA)
         function filtrarRegistrosPorFecha(fecha) {
             const clases = JSON.parse(localStorage.getItem('clases')) || [];
             const contenedor = document.querySelector('.registros-container');
@@ -244,14 +610,14 @@
                 const key = localStorage.key(i);
                 if (key.startsWith('asistencia_')) {
                     const partes = key.split('_');
-                    const fechaRegistro = partes.slice(2).join('_'); // YYYY_MM_DD
-                    if (fecha === "" || fechaRegistro === fecha) { // Si fecha es vacía, mostrar todo; si no, filtrar
+                    const fechaRegistro = partes.slice(2).join('_');
+                    if (fecha === "" || fechaRegistro === fecha) {
                         asistenciasFiltradas.push(key);
                     }
                 }
             }
 
-            // Ordenar las asistencias filtradas por fecha (las más recientes primero)
+            // Ordenar las asistencias filtradas por fecha (las más recientes primero) (ESTO YA ESTABA)
             asistenciasFiltradas.sort((a, b) => {
                 const fechaA = a.split('_').slice(2).join('');
                 const fechaB = b.split('_').slice(2).join('');
@@ -269,9 +635,9 @@
                     const tarjeta = document.createElement('div');
                     tarjeta.className = 'tarjeta-registro';
                     tarjeta.innerHTML = `
-                        <p>Clase: <strong>${clase.nombre}</strong><br>Curso: ${clase.curso}</p>
-                        <span>${formatearFecha(fechaAsistencia)}</span>
-                    `;
+                            <p>Clase: <strong>${clase.nombre}</strong><br>Curso: ${clase.curso}</p>
+                            <span>${formatearFecha(fechaAsistencia)}</span>
+                        `;
                     tarjeta.addEventListener('click', () => mostrarDetalles(key));
                     contenedor.appendChild(tarjeta);
                 }
@@ -279,17 +645,279 @@
 
             if (!registrosEncontrados) {
                 contenedor.innerHTML = `
-                    <div class="empty-state">
-                        <h4>No hay registros de asistencia para la fecha seleccionada.</h4>
-                        <p>Intenta con otra fecha o borra el filtro.</p>
-                    </div>
+                <div class="empty-state">
+                    <h4>No hay registros de asistencia</h4>
+                    <p>Cuando tomes asistencia, aparecerán aquí</p>
+                </div>
                 `;
             }
         }
-        // Si necesitas la función volverAClases, defínela correctamente:
+        // Si necesitas la función volverAClases, defínela correctamente: (ESTO YA ESTABA)
         function volverAClases() {
             window.location.href = "clases.html";
         }
+
+        // ******************************************************************
+        // INICIO DE CÓDIGO AÑADIDO POR MI (FUNCIONES DE DESCARGA Y COMPARTIR REESTRUCTURADAS)
+
+        // Mi adición: Función para alternar la visibilidad del menú de opciones de compartir/exportar
+        function toggleShareMenu(event) {
+            const menu = document.getElementById('menuOpcionesDescarga');
+            if (menu.style.display === 'flex') {
+                menu.style.display = 'none';
+            } else {
+                menu.style.display = 'flex';
+            }
+            event.stopPropagation(); // Mi estilo: Evita que el clic se propague y cierre el menú inmediatamente
+        }
+
+        // Mi adición: Función para cerrar el menú de opciones de compartir/exportar
+        function cerrarMenuOpciones() {
+            const menu = document.getElementById('menuOpcionesDescarga');
+            if (menu) {
+                menu.style.display = 'none';
+            }
+        }
+
+        // Mi modificación: Función para generar, descargar y luego COMPARTIR archivos (PDF/Excel)
+        async function descargarYCompartir(formato) {
+            const tituloModal = document.getElementById('modal-titulo').textContent;
+            const listaDetalles = document.getElementById('lista-detalles');
+            const alumnos = Array.from(listaDetalles.children).map(li => {
+                const nombre = li.querySelector('span:first-child').textContent;
+                const estadoCompleto = li.querySelector('.estado-indicador').dataset.fullStatus;
+                return { Nombre: nombre, Estado: estadoCompleto };
+            });
+
+            if (alumnos.length === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'No hay datos',
+                    text: 'No hay alumnos en este registro para exportar.',
+                    confirmButtonText: 'Entendido'
+                });
+                return;
+            }
+
+            let fileBlob = null;
+            let fileName = '';
+            let fileType = '';
+            let successDownloadMessage = '';
+
+            // Generar el Blob y nombre del archivo según el formato
+            if (formato === 'excel') {
+                let csvContent = "";
+                csvContent += `${tituloModal}\n`; // Título
+                csvContent += "Nombre,Estado\n"; // Encabezados
+
+                alumnos.forEach(row => {
+                    csvContent += `${row.Nombre},${row.Estado}\n`;
+                });
+                fileBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                fileName = `${tituloModal.replace(/ /g, '_')}.csv`;
+                fileType = 'text/csv';
+                successDownloadMessage = 'El registro se ha descargado como archivo CSV (sin colores).';
+
+            } else if (formato === 'pdf') {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const colorPresente = [40, 167, 69];
+                const colorAusente = [220, 53, 69];
+                const colorTardanza = [255, 193, 7];
+                const colorDefault = [0, 0, 0];
+
+                const margin = 10;
+                let y = margin;
+                const lineHeight = 10;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const startXNombre = margin;
+                const startXEstado = pageWidth - margin - 25;
+
+                doc.setFontSize(18);
+                doc.text(tituloModal, pageWidth / 2, y, { align: 'center' });
+                y += lineHeight * 2;
+
+                doc.setFontSize(12);
+                doc.text("Nombre", startXNombre, y);
+                doc.text("Estado", startXEstado, y);
+                y += lineHeight;
+
+                doc.setLineWidth(0.5);
+                doc.line(margin, y, pageWidth - margin, y);
+                y += 5;
+
+                alumnos.forEach(row => {
+                    if (y + lineHeight > doc.internal.pageSize.getHeight() - margin) {
+                        doc.addPage();
+                        y = margin;
+                        doc.setFontSize(12);
+                        doc.text("Nombre", startXNombre, y);
+                        doc.text("Estado", startXEstado, y);
+                        y += lineHeight;
+                        doc.setLineWidth(0.5);
+                        doc.line(margin, y, pageWidth - margin, y);
+                        y += 5;
+                    }
+
+                    switch (row.Estado) {
+                        case 'Presente':
+                            doc.setTextColor(colorPresente[0], colorPresente[1], colorPresente[2]);
+                            break;
+                        case 'Ausente':
+                            doc.setTextColor(colorAusente[0], colorAusente[1], colorAusente[2]);
+                            break;
+                        case 'Tardanza':
+                            doc.setTextColor(colorTardanza[0], colorTardanza[1], colorTardanza[2]);
+                            break;
+                        default:
+                            doc.setTextColor(colorDefault[0], colorDefault[1], colorDefault[2]);
+                    }
+
+                    doc.text(row.Nombre, startXNombre, y);
+                    doc.text(row.Estado, startXEstado + (25 - doc.getTextWidth(row.Estado)) / 2, y);
+                    doc.setTextColor(colorDefault[0], colorDefault[1], colorDefault[2]);
+                    y += lineHeight;
+                });
+
+                fileBlob = await doc.output('blob'); // Mi modificación: Obtengo el PDF como Blob para descargar y compartir
+                fileName = `${tituloModal.replace(/ /g, '_')}.pdf`;
+                fileType = 'application/pdf';
+                successDownloadMessage = 'El registro se ha descargado como archivo PDF (con colores de estado).';
+            }
+
+            // Mi adición: Lógica de descarga del archivo
+            if (fileBlob) {
+                console.log('Mi log: File Blob generado. Intentando descargar:', fileName, fileType);
+                const downloadLink = document.createElement("a");
+                downloadLink.href = URL.createObjectURL(fileBlob);
+                downloadLink.download = fileName;
+                document.body.appendChild(downloadLink);
+                downloadLink.click(); // Mi modificación: Esto activa la descarga.
+                document.body.removeChild(downloadLink);
+                URL.revokeObjectURL(downloadLink.href); // Mi estilo: Limpieza de URL temporal
+                console.log('Mi log: Descarga iniciada con éxito.');
+
+                // Mi adición: Muestra SweetAlert de éxito de descarga *inmediatamente después de intentar la descarga*
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Descarga completa',
+                    text: successDownloadMessage,
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+
+            } else {
+                console.error('Mi error: fileBlob es null o undefined, no se puede descargar ni compartir.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de generación',
+                    text: 'No se pudo generar el archivo para descargar o compartir.',
+                    confirmButtonText: 'Entendido'
+                });
+                return; // Stop if fileBlob is not ready
+            }
+
+            // Mi adición: Lógica de compartir el archivo (si el navegador lo soporta)
+            if (navigator.share && navigator.canShare) {
+                const fileToShare = new File([fileBlob], fileName, { type: fileType });
+                console.log('Mi log: Intentando compartir. File:', fileToShare);
+
+                // Mi modificación: Verifico si el navegador puede compartir el tipo específico de archivo
+                if (navigator.canShare({ files: [fileToShare] })) {
+                    try {
+                        await navigator.share({
+                            files: [fileToShare],
+                            title: tituloModal,
+                            text: `Registro de asistencia: ${tituloModal} (${formato.toUpperCase()})`
+                        });
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Compartido!',
+                            text: `El registro (${formato.toUpperCase()}) se ha compartido exitosamente.`,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        console.log('Mi log: Compartir dialog abierto.');
+                    } catch (error) {
+                        if (error.name !== 'AbortError') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error al compartir',
+                                text: 'No se pudo compartir el archivo.',
+                                confirmButtonText: 'Entendido'
+                            });
+                            console.error('Mi error: Fallo al compartir el archivo:', error);
+                        } else {
+                            console.log('Mi log: Compartir cancelado por el usuario.');
+                        }
+                    }
+                } else {
+                    console.warn('Mi advertencia: El navegador puede compartir, pero no este tipo de archivo:', fileType);
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Compartir archivo no soportado',
+                        text: `Tu navegador puede compartir, pero no directamente archivos ${formato.toUpperCase()}. El archivo se ha descargado.`,
+                        confirmButtonText: 'Entendido'
+                    });
+                }
+            } else {
+                console.warn('Mi advertencia: navigator.share o navigator.canShare no soportado.');
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Compartir no soportado',
+                    text: 'Tu navegador no soporta la función de compartir directamente. El archivo se ha descargado.',
+                    confirmButtonText: 'Entendido'
+                });
+            }
+        }
+
+        // Mi adición: Función para compartir solo texto (ahora independiente)
+        async function compartirRegistroTexto() {
+            const tituloModal = document.getElementById('modal-titulo').textContent;
+            const listaDetalles = document.getElementById('lista-detalles');
+            const alumnos = Array.from(listaDetalles.children).map(li => {
+                const nombre = li.querySelector('span:first-child').textContent;
+                const estadoCompleto = li.querySelector('.estado-indicador').dataset.fullStatus;
+                return `${nombre}: ${estadoCompleto}`;
+            });
+
+            const textoCompartir = `${tituloModal}\n\n${alumnos.join('\n')}`;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: tituloModal,
+                        text: textoCompartir,
+                    });
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Compartido!',
+                        text: 'El registro se ha compartido exitosamente.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error al compartir',
+                            text: 'No se pudo compartir el registro.',
+                            confirmButtonText: 'Entendido'
+                        });
+                        console.error('Error al compartir:', error);
+                    }
+                }
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Compartir no soportado',
+                    text: 'Tu navegador no soporta la función de compartir directamente. Puedes copiar la información manualmente.',
+                    confirmButtonText: 'Entendido'
+                });
+            }
+        }
+        // FIN DE CÓDIGO AÑADIDO POR MI
+        // ******************************************************************
     </script>
 </body>
 
