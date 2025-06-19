@@ -582,7 +582,7 @@
             // Esto me permitirá acceder a ellos desde la función editarAsistenciaRegistro.
             const partesClave = clave.split('_');
             currentRecordClaseId = partesClave[1];
-            currentRecordFecha = partesClave.slice(2).join('_'); // Formato YYYY_MM_DD
+            currentRecordFecha = partesClave.slice(2).join('_'); // Formatoレンダー_MM_DD
 
             const datos = JSON.parse(localStorage.getItem(clave));
             const lista = document.getElementById('lista-detalles');
