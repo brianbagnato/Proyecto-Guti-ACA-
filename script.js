@@ -1,9 +1,9 @@
 // script.js
 // Sistema de Gestión de Alumnos
 // Verificar si estamos en la página de clases
-if (window.location.pathname.includes('clases.html')) {
+if (window.location.pathname.includes('index.html')) {
     document.addEventListener('DOMContentLoaded', () => {
-        // Código para mostrar clases (similar al de clases.html)
+        // Código para mostrar clases (similar al de index.html)
     });
 }
 
