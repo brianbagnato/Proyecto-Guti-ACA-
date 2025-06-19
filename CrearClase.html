@@ -9,8 +9,8 @@
     <link rel="stylesheet" href="style.css" />
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+
     <style>
         #btnAgregarAlumno {
             background-color: gray;
@@ -79,6 +79,48 @@
             margin-top: 20px;
             color: #fff;
         }
+
+        /* ****************************************************************** */
+        /* INICIO DE ESTILOS AÑADIDOS POR MI (PARA EL BOTÓN DE ELIMINAR CLASE) */
+        /* Este estilo posiciona el botón de eliminar arriba a la derecha */
+        .delete-class-button {
+            position: absolute;
+            /* Mi estilo: Posiciona el botón de forma absoluta */
+            top: 10px;
+            /* Mi estilo: Distancia desde arriba */
+            right: 10px;
+            /* Mi estilo: Distancia desde la derecha */
+            background: none;
+            /* Mi estilo: Sin fondo */
+            border: none;
+            /* Mi estilo: Sin borde */
+            cursor: pointer;
+            /* Mi estilo: Cambia el cursor a una mano */
+            padding: 5px;
+            /* Mi estilo: Un poco de espacio alrededor del icono */
+            z-index: 10;
+            /* Mi estilo: Asegura que esté por encima de otros elementos */
+        }
+
+        /* Estilo para la imagen del icono de eliminar */
+        .delete-class-button img {
+            width: 24px;
+            /* Mi estilo: Tamaño del icono */
+            height: 24px;
+            /* Mi estilo: Tamaño del icono */
+            opacity: 0.7;
+            /* Mi estilo: Un poco de transparencia */
+            transition: opacity 0.2s ease-in-out;
+            /* Mi estilo: Transición suave al pasar el mouse */
+        }
+
+        .delete-class-button:hover img {
+            opacity: 1;
+            /* Mi estilo: Opacidad completa al pasar el mouse */
+        }
+
+        /* FIN DE ESTILOS AÑADIDOS POR MI (PARA EL BOTÓN DE ELIMINAR CLASE) */
+        /* ****************************************************************** */
     </style>
 </head>
 
@@ -86,18 +128,19 @@
     <div class="header">
         <a href="clases.html" class="back-arrow">&larr;</a>
         <h1>Crear Nueva Clase </h1>
+        <button class="delete-class-button" id="btnEliminarClase">
+            <img src="Vector.png" alt="Eliminar Clase">
+        </button>
     </div>
 
     <div class="container">
         <label for="nombre">Nombre de Clase</label>
-        <input type="text" id="nombre" placeholder="Matemáticas 101" required />
-
+        <input type="text" id="nombre" placeholder="Matemáticas 101" required maxlength="70" />
         <label for="curso">Curso</label>
-        <input type="text" id="curso" placeholder="1er Año" required />
-
+        <input type="text" id="curso" placeholder="1er Año" required maxlength="15" />
         <label for="alumno">Nuevo Alumno</label>
         <div class="alumno-input">
-            <input type="text" id="alumno" placeholder="Nombre completo" />
+            <input type="text" id="alumno" placeholder="Nombre completo" maxlength="50" />
             <button id="btnAgregarAlumno">+</button>
         </div>
 
@@ -126,7 +169,21 @@
         </div>
     </div>
 
+    <div id="modalConfirmarEliminarClase" class="modal">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h3>Confirmar eliminación</h3>
+                <button class="cerrar-modal" id="cerrarModalEliminarClase">&times;</button>
+            </div>
+            <p>¿Estás seguro de que deseas eliminar esta clase?</p>
+            <div class="botones-finales">
+                <button id="cancelarEliminarClase">Cancelar</button>
+                <button id="confirmarEliminarClase">Eliminar</button>
+            </div>
+        </div>
+    </div>
     <script>
+        // INICIO DE JS ORIGINAL
         let alumnosTemp = [];
         let isDirty = false;
         let claseActual = {
@@ -138,6 +195,10 @@
         const listaAlumnos = document.querySelector('.lista-alumnos');
         const btnAgregarAlumno = document.getElementById('btnAgregarAlumno');
         const inputAlumno = document.getElementById('alumno');
+        // FIN DE JS ORIGINAL
+
+        // INICIO DE CÓDIGO: Función para actualizar el estilo del botón "Agregar Alumno"
+        // Esto ya estaba en tu código
         function actualizarEstiloBotonAgregar() {
             const tieneTexto = inputAlumno.value.trim().length > 0;
             if (tieneTexto) {
@@ -147,7 +208,9 @@
             }
         }
         inputAlumno.addEventListener('input', actualizarEstiloBotonAgregar);
+        // FIN DE CÓDIGO
 
+        // INICIO DE JS ORIGINAL
         const btnGuardar = document.getElementById('btnGuardar');
         const inputNombreClase = document.getElementById('nombre');
         const inputCurso = document.getElementById('curso');
@@ -158,12 +221,60 @@
         const btnConfirmarSalida = document.getElementById('confirmarSalida');
         const btnCancelarSalida = document.getElementById('cancelarSalida');
 
-        // NUEVA ADICIÓN: Elementos para la importación
+        // NUEVA ADICIÓN: Elementos para la importación (ESTO YA ESTABA)
         const btnImportar = document.getElementById('btnImportar');
         const inputArchivoImportar = document.getElementById('inputArchivoImportar');
         // FIN NUEVA ADICIÓN
 
-        // Detectar edición desde URL
+        // ******************************************************************
+        // INICIO DE JAVASCRIPT AÑADIDO POR MI (LOGICA DEL BOTÓN ELIMINAR CLASE)
+        const btnEliminarClase = document.getElementById('btnEliminarClase');
+        const modalConfirmarEliminarClase = document.getElementById('modalConfirmarEliminarClase');
+        const btnCerrarModalEliminarClase = document.getElementById('cerrarModalEliminarClase');
+        const btnCancelarEliminarClase = document.getElementById('cancelarEliminarClase');
+        const btnConfirmarEliminarClase = document.getElementById('confirmarEliminarClase');
+        // Obtener el ID de la clase si estamos editando. Esto también se usa para decidir si mostrar el botón.
+        let idClaseAEliminar = obtenerParametro('editar');
+
+        // Si no estamos editando una clase (idClaseAEliminar es null), ocultar el botón de eliminar
+        if (!idClaseAEliminar) {
+            btnEliminarClase.style.display = 'none';
+        }
+
+        // Mostrar el modal de confirmación al hacer clic en el botón de eliminar clase
+        btnEliminarClase.addEventListener('click', () => {
+            if (idClaseAEliminar) { // Solo si hay una clase para eliminar (estamos editando)
+                modalConfirmarEliminarClase.style.display = 'flex';
+            } else {
+                // Si por alguna razón se hace clic y no hay ID de clase, simplemente volver a la lista
+                // (Esto no debería pasar si el botón está oculto para nuevas clases)
+                window.location.href = 'clases.html';
+            }
+        });
+
+        // Cerrar el modal de confirmación al hacer clic en la "X"
+        btnCerrarModalEliminarClase.addEventListener('click', () => {
+            modalConfirmarEliminarClase.style.display = 'none';
+        });
+
+        // Cerrar el modal de confirmación al hacer clic en "Cancelar"
+        btnCancelarEliminarClase.addEventListener('click', () => {
+            modalConfirmarEliminarClase.style.display = 'none';
+        });
+
+        // Lógica para eliminar la clase al confirmar
+        btnConfirmarEliminarClase.addEventListener('click', () => {
+            if (idClaseAEliminar) {
+                const clasesGuardadas = JSON.parse(localStorage.getItem('clases')) || [];
+                const nuevasClases = clasesGuardadas.filter(clase => clase.id !== idClaseAEliminar);
+                localStorage.setItem('clases', JSON.stringify(nuevasClases));
+                window.location.href = 'clases.html'; // Volver a la lista de clases después de eliminar
+            }
+        });
+        // FIN DE JAVASCRIPT AÑADIDO POR MI (LOGICA DEL BOTÓN ELIMINAR CLASE)
+        // ******************************************************************
+
+        // Detectar edición desde URL (ESTO YA ESTABA)
         function obtenerParametro(nombre) {
             const url = new URL(window.location.href);
             return url.searchParams.get(nombre);
@@ -191,7 +302,7 @@
             const spanNombre = document.createElement('span');
             spanNombre.textContent = nombre;
             spanNombre.className = 'nombre-alumno';
-            // MODIFICACIÓN: Asegurarse de que el índice se actualice correctamente en la UI
+            // MODIFICACIÓN: Asegurarse de que el índice se actualice correctamente en la UI (ESTO YA ESTABA)
             spanNombre.dataset.index = index;
 
             const acciones = document.createElement('div');
@@ -206,7 +317,7 @@
             iconoEditar.style.width = '20px';
             iconoEditar.style.height = '20px';
             btnEditar.appendChild(iconoEditar);
-            // MODIFICACIÓN: Pasar el span y el índice al editarAlumno
+            // MODIFICACIÓN: Pasar el span y el índice al editarAlumno (ESTO YA ESTABA)
             btnEditar.onclick = () => editarAlumno(spanNombre, index);
 
             const btnEliminar = document.createElement('button');
@@ -236,7 +347,7 @@
             alumnosTemp.forEach((nombre, index) => crearAlumnoUI(nombre, index));
         }
 
-        // MODIFICACIÓN: editarAlumno ahora recibe el índice
+        // MODIFICACIÓN: editarAlumno ahora recibe el índice (ESTO YA ESTABA)
         function editarAlumno(span, originalIndex) {
             const originalNombre = span.textContent;
             const contenedor = span.parentElement;
@@ -245,6 +356,9 @@
             input.value = originalNombre;
             input.className = 'input-edicion';
             input.type = 'text';
+            // INICIO DE MODIFICACIÓN: Añadido el atributo maxlength al input de edición
+            input.maxLength = "50"; // Mi modificación: Limita los caracteres al editar
+            // FIN DE MODIFICACIÓN
 
             const acciones = contenedor.querySelector('.acciones');
             acciones.innerHTML = '';
@@ -259,10 +373,20 @@
             btnAceptar.appendChild(iconoCheck);
             btnAceptar.onclick = () => {
                 const nuevoNombre = input.value.trim();
-                if (nuevoNombre !== '') {
-                    alumnosTemp[originalIndex] = nuevoNombre; // Usa originalIndex
+                // INICIO DE MODIFICACIÓN: Validación en JS al guardar el nombre editado
+                if (nuevoNombre !== '' && nuevoNombre.length <= 50) { // Mi modificación: Añade validación de longitud
+                    alumnosTemp[originalIndex] = nuevoNombre;
                     isDirty = true;
+                } else if (nuevoNombre.length > 50) { // Mi modificación: Mensaje de error si excede
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de edición',
+                        text: 'El nombre del alumno no puede exceder los 50 caracteres.'
+                    });
+                    // No restaurar vista si hay error para que el usuario pueda corregir
+                    return;
                 }
+                // FIN DE MODIFICACIÓN
                 restaurarVista(span, input, acciones, originalIndex); // Pasa originalIndex
             };
 
@@ -284,7 +408,7 @@
             acciones.appendChild(btnCancelar);
         }
 
-        // MODIFICACIÓN: restaurarVista ahora recibe el índice (aunque no lo use directamente)
+        // MODIFICACIÓN: restaurarVista ahora recibe el índice (aunque no lo use directamente) (ESTO YA ESTABA)
         function restaurarVista(span, input, acciones, index) {
             input.remove();
             span.style.display = '';
@@ -293,13 +417,21 @@
 
         btnAgregarAlumno.addEventListener('click', () => {
             let nombre = inputAlumno.value.trim();
-            if (nombre != '') {
+            // INICIO DE MODIFICACIÓN: Validación en JS al agregar nuevo alumno
+            if (nombre != '' && nombre.length <= 50) { // Mi modificación: Añade validación de longitud
                 alumnosTemp.push(nombre);
                 actualizarListaUI();
                 inputAlumno.value = '';
                 isDirty = true;
                 actualizarEstiloBotonAgregar();
+            } else if (nombre.length > 50) { // Mi modificación: Mensaje de error si excede
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Nombre de alumno demasiado largo',
+                    text: 'El nombre del alumno no puede exceder los 50 caracteres.'
+                });
             }
+            // FIN DE MODIFICACIÓN
         });
 
         btnGuardar.addEventListener('click', () => {
@@ -316,10 +448,32 @@
                 return;
             }
 
+            // INICIO DE MODIFICACIÓN: Validación de longitud para alumno pendiente al guardar
             if (alumnoPendiente !== '') {
-                alumnosTemp.push(alumnoPendiente);
-                inputAlumno.value = '';
+                if (alumnoPendiente.length <= 50) { // Mi modificación: Valida longitud
+                    alumnosTemp.push(alumnoPendiente);
+                    inputAlumno.value = '';
+                } else { // Mi modificación: Muestra error si es demasiado largo y no lo agrega
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Nombre de alumno demasiado largo',
+                        text: 'El alumno pendiente no se agregó porque su nombre excede los 50 caracteres.'
+                    });
+                    return; // No continuar guardando si hay un error con el alumno pendiente
+                }
             }
+            // FIN DE MODIFICACIÓN
+
+            // INICIO DE MODIFICACIÓN: Validación de longitud para nombre de clase y curso al guardar
+            if (nombreClase.length > 70 || curso.length > 15) { // Mi modificación: Valida longitud de clase y curso
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al guardar',
+                    text: 'El nombre de la clase no puede exceder 30 caracteres y el curso no puede exceder 15 caracteres.'
+                });
+                return; // No guardar si los campos de clase/curso exceden
+            }
+            // FIN DE MODIFICACIÓN
 
             claseActual.nombre = nombreClase;
             claseActual.curso = curso;
@@ -349,15 +503,40 @@
             });
         });
 
-        // Confirmación al salir
+        // Confirmación al salir (ESTO YA ESTABA)
         inputNombreClase.addEventListener('input', () => isDirty = true);
         inputCurso.addEventListener('input', () => isDirty = true);
 
         linkVolver.addEventListener('click', (e) => {
             const alumnoPendiente = inputAlumno.value.trim();
-            if (alumnoPendiente !== '') {
+            // INICIO DE MODIFICACIÓN: Validación de longitud para alumno pendiente al intentar salir
+            if (alumnoPendiente !== '' && alumnoPendiente.length <= 50) { // Mi modificación: Valida longitud
                 isDirty = true;
+            } else if (alumnoPendiente.length > 50) { // Mi modificación: Muestra error y no permite salir sin guardar
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Nombre de alumno demasiado largo',
+                    text: 'Corrige el nombre del alumno pendiente antes de salir o guárdalo.'
+                });
+                e.preventDefault(); // Evita que se abra el modal de salir o que se salga
+                return;
             }
+            // FIN DE MODIFICACIÓN
+
+            // INICIO DE MODIFICACIÓN: Validación de longitud para nombre de clase y curso al intentar salir
+            const nombreClase = inputNombreClase.value.trim();
+            const curso = inputCurso.value.trim();
+            if (nombreClase.length > 70 || curso.length > 15) { // Mi modificación: Valida longitud de clase y curso
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al salir',
+                    text: 'Corrige el nombre de la clase (máx. 30 caracteres) y/o el curso (máx. 15 caracteres) antes de salir.'
+                });
+                e.preventDefault(); // Evita que se abra el modal de salir o que se salga
+                return;
+            }
+            // FIN DE MODIFICACIÓN
+
             if (isDirty) {
                 e.preventDefault();
                 modalSalir.style.display = 'flex';
@@ -376,8 +555,7 @@
             window.location.href = 'clases.html';
         });
 
-
-        // NUEVA ADICIÓN: Lógica para el botón de importar
+        // NUEVA ADICIÓN: Lógica para el botón de importar (ESTO YA ESTABA)
         btnImportar.addEventListener('click', () => {
             inputArchivoImportar.click(); // Simula un clic en el input de archivo oculto
         });
@@ -412,9 +590,21 @@
                     // Saltamos la primera fila si es un encabezado (ej. "Nombre de Alumno")
                     for (let i = 0; i < json.length; i++) {
                         const row = json[i];
+                        // INICIO DE MODIFICACIÓN: Validación de longitud en la importación de alumnos
                         if (row[0] && typeof row[0] === 'string' && row[0].trim() !== '') {
-                            alumnosImportados.push(row[0].trim());
+                            const alumnoNombre = row[0].trim();
+                            if (alumnoNombre.length <= 50) { // Mi modificación: Valida longitud
+                                alumnosImportados.push(alumnoNombre);
+                            } else { // Mi modificación: Notifica al usuario sobre nombres demasiado largos
+                                console.warn(`Alumno "${alumnoNombre}" ignorado por exceder los 50 caracteres.`);
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Nombres de alumnos largos ignorados',
+                                    text: `Se encontraron algunos alumnos con nombres que exceden los 50 caracteres y fueron ignorados durante la importación.`
+                                });
+                            }
                         }
+                        // FIN DE MODIFICACIÓN
                     }
 
                     if (alumnosImportados.length > 0) {
@@ -432,7 +622,7 @@
                         Swal.fire({
                             icon: 'warning',
                             title: '¡Importación Parcial!',
-                            text: 'No se encontraron nombres de alumnos válidos en la primera columna del archivo.',
+                            text: 'No se encontraron nombres de alumnos válidos o con longitud aceptable en la primera columna del archivo.', // Mensaje más claro
                         });
                     }
                 };
