@@ -13,6 +13,33 @@
             margin-top: 20px;
             color: #fff;
         }
+
+        /* ****************************************************************** */
+        /* INICIO DE CÓDIGO AÑADIDO PARA EL MENSAJE DE CLASES VACÍAS */
+        /* Este es el único bloque de estilos que debería ser nuevo y no tocar los existentes */
+        .contenedor-clases-vacias {
+            text-align: center;
+            padding: 50px 20px;
+            margin-top: 80px;
+            /* Ajusta este margen si tu H1 ya tiene uno diferente */
+            color: #ccc;
+            /* Color de texto para el mensaje, puedes ajustarlo a tus colores */
+            font-size: 1.2em;
+            /* Tamaño de fuente para el mensaje */
+        }
+
+        .contenedor-clases-vacias p {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .contenedor-clases-vacias strong {
+            font-weight: bold;
+            /* Asegura que el strong se vea como tal */
+        }
+
+        /* FIN DE CÓDIGO AÑADIDO PARA EL MENSAJE DE CLASES VACÍAS */
+        /* ****************************************************************** */
     </style>
 </head>
 
@@ -21,6 +48,11 @@
 
     <div class="contenedor-tarjetas"></div>
 
+    <div class="contenedor-clases-vacias" id="clases-vacias-mensaje">
+        <p>¡Bienvenido! Parece que aún no tienes ninguna clase.</p>
+        <p>Para empezar, haz clic en el botón <strong>"+ NUEVA CLASE"</strong> ubicado en la parte inferior de la
+            pantalla.</p>
+    </div>
     <a href="CrearClase.html">
         <button class="btn-nueva-clase">+ NUEVA CLASE</button>
     </a>
@@ -42,45 +74,72 @@
     <script>
         let idAEliminar = null;
         const contenedor = document.querySelector('.contenedor-tarjetas');
+        // ******************************************************************
+        // INICIO DE CÓDIGO: Referencia al div de mensaje de clases vacías. Esto ya estaba.
+        const mensajeClasesVacias = document.getElementById('clases-vacias-mensaje');
+        // FIN DE CÓDIGO
+        // ******************************************************************
 
         function renderClases() {
             contenedor.innerHTML = '';
             let clases = JSON.parse(localStorage.getItem('clases')) || [];
 
-            clases.forEach(clase => {
-                const tarjeta = document.createElement('div');
-                tarjeta.className = 'tarjeta-clase';
-                tarjeta.innerHTML = `
-                    <p><strong>${clase.nombre}</strong><br />${clase.curso}</p>
-                    <div class="acciones-clase">
-                        <a href="tomarAsistencia.html?claseId=${clase.id}"><button>Tomar asistencia</button></a>
-                        <a href="registros.html?claseId=${clase.id}"><button>Registros anteriores</button></a>
-                    </div>
-                    <a href="CrearClase.html?editar=${clase.id}" class="configurar-clase">
-                        <img src="./img/config-icon.png" alt="Configurar" />
-                    </a>
-                    <button class="btn-eliminar-clase" data-id="${clase.id}">🗑️</button>
-                `;
-                contenedor.appendChild(tarjeta);
-            });
+            // ******************************************************************
+            // INICIO DE CÓDIGO: Lógica para mostrar/ocultar el mensaje de clases vacías. Esto ya estaba.
+            if (clases.length === 0) {
+                mensajeClasesVacias.style.display = 'block'; // Mostrar el mensaje
+            } else {
+                mensajeClasesVacias.style.display = 'none'; // Ocultar el mensaje
+                // FIN DE CÓDIGO
+                // ******************************************************************
+                clases.forEach(clase => {
+                    const tarjeta = document.createElement('div');
+                    tarjeta.className = 'tarjeta-clase';
+                    tarjeta.innerHTML = `
+                        <p><strong>${clase.nombre}</strong><br />${clase.curso}</p>
+                        <div class="acciones-clase">
+                            <a href="tomarAsistencia.html?claseId=${clase.id}"><button>Tomar asistencia</button></a>
+                            <a href="registros.html?claseId=${clase.id}"><button>Registros anteriores</button></a>
+                        </div>
+                        <a href="CrearClase.html?editar=${clase.id}" class="configurar-clase">
+                            <img src="./img/config-icon.png" alt="Configurar" />
+                        </a>
+                        `;
+                    contenedor.appendChild(tarjeta);
+                });
+                // ******************************************************************
+                // INICIO DE CÓDIGO: Cierre del else del condicional. Esto ya estaba.
+            }
+            // FIN DE CÓDIGO
+            // ******************************************************************
 
+            // ******************************************************************
+            // INICIO DE CAMBIO: ELIMINAR EL EVENT LISTENER DEL BOTÓN DEL TACHITO
+            // Este bloque se elimina porque el botón .btn-eliminar-clase ya no existe en el HTML de la tarjeta.
+            /*
             document.querySelectorAll('.btn-eliminar-clase').forEach(btn => {
                 btn.addEventListener('click', function () {
                     idAEliminar = this.dataset.id;
                     document.getElementById('modalConfirmarEliminar').classList.add('visible');
                 });
             });
+            */
+            // FIN DE CAMBIO
+            // ******************************************************************
         }
 
         function cerrarModal() {
             document.getElementById('modalConfirmarEliminar').classList.remove('visible');
+            idAEliminar = null;
         }
 
         document.getElementById('btnConfirmarEliminar').addEventListener('click', () => {
-            let clases = JSON.parse(localStorage.getItem('clases')) || [];
-            clases = clases.filter(c => c.id != idAEliminar);
-            localStorage.setItem('clases', JSON.stringify(clases));
-            renderClases();
+            if (idAEliminar) {
+                let clases = JSON.parse(localStorage.getItem('clases')) || [];
+                clases = clases.filter(c => c.id != idAEliminar);
+                localStorage.setItem('clases', JSON.stringify(clases));
+                renderClases();
+            }
             cerrarModal();
         });
 
