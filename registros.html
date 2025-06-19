@@ -357,6 +357,16 @@
                 </button>
                 <!-- Menú de opciones de descarga/compartir -->
                 <div class="menu-opciones-descarga" id="menuOpcionesDescarga">
+                    <!-- Mi modificación: Botón para editar asistencia -->
+                    <button onclick="editarAsistenciaRegistro(); cerrarMenuOpciones();">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="feather feather-edit">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Editar Asistencia
+                    </button>
                     <button onclick="descargarYCompartir('pdf'); cerrarMenuOpciones();">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -395,6 +405,11 @@
     </div>
 
     <script>
+        // Mi adición: Variables para almacenar el ID y la fecha del registro actualmente abierto en el modal.
+        // Esto me permitirá acceder a ellos desde la función editarAsistenciaRegistro.
+        let currentRecordClaseId = null;
+        let currentRecordFecha = null;
+
         // Datos de ejemplo para demostración (ESTO YA ESTABA)
         const demoData = {
             clases: [
@@ -511,13 +526,18 @@
 
         // Mostrar detalles en el modal (ESTO YA ESTABA)
         function mostrarDetalles(clave) {
+            // Mi adición: Almaceno el ID de clase y la fecha del registro actual en variables globales.
+            // Esto me permitirá acceder a ellos desde la función editarAsistenciaRegistro.
+            const partesClave = clave.split('_');
+            currentRecordClaseId = partesClave[1];
+            currentRecordFecha = partesClave.slice(2).join('_'); // Formato YYYY_MM_DD
+
             const datos = JSON.parse(localStorage.getItem(clave));
             const lista = document.getElementById('lista-detalles');
             lista.innerHTML = '';
 
             // Extraer fecha de la clave (ESTO YA ESTABA)
-            const partes = clave.split('_');
-            const fechaRaw = partes.slice(2).join('_');
+            const fechaRaw = partesClave.slice(2).join('_');
             const titulo = document.getElementById('modal-titulo');
             titulo.textContent = `Asistencia del ${formatearFecha(fechaRaw)}`;
 
@@ -561,6 +581,9 @@
             modal.classList.remove('visible');
             // Mi adición: Cierra el menú de opciones al cerrar el modal principal
             cerrarMenuOpciones();
+            // Mi adición: Reseteo las variables globales del registro actual.
+            currentRecordClaseId = null;
+            currentRecordFecha = null;
         }
 
         // Inicializar (ESTO YA ESTABA)
