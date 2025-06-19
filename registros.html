@@ -312,6 +312,46 @@
             /* Mi estilo: Color de icono oscuro */
         }
 
+        /* ****************************************************************** */
+        /* INICIO DE ESTILOS AÑADIDOS POR MI (PARA BOTÓN EDITAR EN LA TARJETA DE REGISTRO) */
+        .tarjeta-registro .btn-editar-registro {
+            background-color: #1f2b4c;
+            /* Mi estilo: Un azul oscuro como tus headers */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            /* Mi estilo: Bordes ligeramente redondeados */
+            padding: 8px 12px;
+            /* Mi estilo: Relleno */
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: auto;
+            /* Mi estilo: Empuja el botón a la derecha */
+            transition: background-color 0.2s ease;
+            display: flex;
+            /* Mi estilo: Para alinear el icono y el texto */
+            align-items: center;
+            /* Mi estilo: Centra verticalmente el icono y el texto */
+            gap: 5px;
+            /* Mi estilo: Espacio entre icono y texto */
+        }
+
+        .tarjeta-registro .btn-editar-registro:hover {
+            background-color: #2c3e6b;
+            /* Mi estilo: Color más oscuro al pasar el mouse */
+        }
+
+        .tarjeta-registro .btn-editar-registro svg {
+            width: 18px;
+            /* Mi estilo: Tamaño del icono */
+            height: 18px;
+            color: white;
+            /* Mi estilo: Color blanco del icono */
+        }
+
+        /* FIN DE ESTILOS AÑADIDOS POR MI (PARA BOTÓN EDITAR EN LA TARJETA DE REGISTRO) */
+        /* ****************************************************************** */
+
         /* FIN DE ESTILOS AÑADIDOS POR MI (PARA BOTONES DE ACCIONES REESTRUCTURADAS) */
         /* ****************************************************************** */
     </style>
@@ -357,16 +397,11 @@
                 </button>
                 <!-- Menú de opciones de descarga/compartir -->
                 <div class="menu-opciones-descarga" id="menuOpcionesDescarga">
-                    <!-- Mi modificación: Botón para editar asistencia -->
-                    <button onclick="editarAsistenciaRegistro(); cerrarMenuOpciones();">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            class="feather feather-edit">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
+                    <!-- Mi modificación: El botón de editar se quita de aquí y se pone en la tarjeta principal -->
+                    <!-- <button onclick="editarAsistenciaRegistro(); cerrarMenuOpciones();">
+                        <svg ... class="feather-edit"></svg>
                         Editar Asistencia
-                    </button>
+                    </button> -->
                     <button onclick="descargarYCompartir('pdf'); cerrarMenuOpciones();">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -377,7 +412,7 @@
                             <line x1="16" y1="17" x2="8" y2="17"></line>
                             <polyline points="10 9 9 9 8 9"></polyline>
                         </svg>
-                        Exportar como PDF
+                        Compartir como PDF
                     </button>
                     <button onclick="descargarYCompartir('excel'); cerrarMenuOpciones();">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -386,7 +421,7 @@
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="12 17 12 5 15 8 9 8"></polyline>
                         </svg>
-                        Exportar como Excel
+                        Compartir como Excel
                     </button>
                     <button onclick="compartirRegistroTexto(); cerrarMenuOpciones();">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -505,10 +540,21 @@
                     const tarjeta = document.createElement('div');
                     tarjeta.className = 'tarjeta-registro';
                     tarjeta.innerHTML = `
-                            <p>Clase: <strong>${clase.nombre}</strong><br>Curso: ${clase.curso}</p>
-                            <span>${formatearFecha(fecha)}</span>
-                        `;
-                    tarjeta.addEventListener('click', () => mostrarDetalles(key));
+                        <p>Clase: <strong>${clase.nombre}</strong><br>Curso: ${clase.curso}</p>
+                        <span>${formatearFecha(fecha)}</span>
+                        <!-- Mi adición: Botón de Editar Asistencia en la tarjeta de registro -->
+                        <button class="btn-editar-registro" 
+                                onclick="editarAsistenciaDesdeRegistro('${claseId}', '${fecha}');">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            Editar
+                        </button>
+                    `;
+                    tarjeta.addEventListener('click', (event) => {
+                        // Mi modificación: Solo abre el modal si no se hizo clic en el botón de editar.
+                        if (!event.target.closest('.btn-editar-registro')) {
+                            mostrarDetalles(key);
+                        }
+                    });
                     contenedor.appendChild(tarjeta);
                 }
             });
@@ -524,9 +570,15 @@
             }
         }
 
+        // Mi adición: Función para redirigir a tomarAsistencia.html para editar un registro específico
+        function editarAsistenciaDesdeRegistro(claseId, fecha) {
+            window.location.href = `tomarAsistencia.html?claseId=${claseId}&fecha=${fecha}`;
+        }
+
+
         // Mostrar detalles en el modal (ESTO YA ESTABA)
         function mostrarDetalles(clave) {
-            // Mi adición: Almaceno el ID de clase y la fecha del registro actual en variables globales.
+            // Mi adición: Almaceno el ID de clase y la fecha del registro actualmente abierto en el modal.
             // Esto me permitirá acceder a ellos desde la función editarAsistenciaRegistro.
             const partesClave = clave.split('_');
             currentRecordClaseId = partesClave[1];
@@ -627,30 +679,29 @@
             contenedor.innerHTML = '';
 
             let registrosEncontrados = false;
-            let asistenciasFiltradas = [];
+            let todasLasAsistencias = [];
 
+            // Recorrer localStorage para encontrar todas las asistencias (ESTO YA ESTABA)
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key.startsWith('asistencia_')) {
-                    const partes = key.split('_');
-                    const fechaRegistro = partes.slice(2).join('_');
-                    if (fecha === "" || fechaRegistro === fecha) {
-                        asistenciasFiltradas.push(key);
-                    }
+                    todasLasAsistencias.push(key);
                 }
             }
 
-            // Ordenar las asistencias filtradas por fecha (las más recientes primero) (ESTO YA ESTABA)
-            asistenciasFiltradas.sort((a, b) => {
+            // Ordenar las asistencias por fecha (las más recientes primero) (ESTO YA ESTABA)
+            todasLasAsistencias.sort((a, b) => {
                 const fechaA = a.split('_').slice(2).join('');
                 const fechaB = b.split('_').slice(2).join('');
                 return fechaB.localeCompare(fechaA);
             });
 
-            asistenciasFiltradas.forEach(key => {
+            todasLasAsistencias.forEach(key => {
                 const partes = key.split('_');
                 const claseId = partes[1];
-                const fechaAsistencia = partes.slice(2).join('_');
+                const fecha = partes.slice(2).join('_');
+
+                if (claseIdSeleccionada && claseId !== claseIdSeleccionada) return;
 
                 const clase = clases.find(c => c.id == claseId);
                 if (clase) {
@@ -659,19 +710,30 @@
                     tarjeta.className = 'tarjeta-registro';
                     tarjeta.innerHTML = `
                             <p>Clase: <strong>${clase.nombre}</strong><br>Curso: ${clase.curso}</p>
-                            <span>${formatearFecha(fechaAsistencia)}</span>
+                            <span>${formatearFecha(fecha)}</span>
+                            <!-- Mi adición: Botón de Editar Asistencia en la tarjeta de registro para filtros -->
+                            <button class="btn-editar-registro" 
+                                    onclick="editarAsistenciaDesdeRegistro('${claseId}', '${fecha}');">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                Editar
+                            </button>
                         `;
-                    tarjeta.addEventListener('click', () => mostrarDetalles(key));
+                    tarjeta.addEventListener('click', (event) => {
+                        // Mi modificación: Solo abre el modal si no se hizo clic en el botón de editar.
+                        if (!event.target.closest('.btn-editar-registro')) {
+                            mostrarDetalles(key);
+                        }
+                    });
                     contenedor.appendChild(tarjeta);
                 }
             });
 
             if (!registrosEncontrados) {
                 contenedor.innerHTML = `
-                <div class="empty-state">
-                    <h4>No hay registros de asistencia</h4>
-                    <p>Cuando tomes asistencia, aparecerán aquí</p>
-                </div>
+                    <div class="empty-state">
+                        <h4>No hay registros de asistencia para la fecha seleccionada.</h4>
+                        <p>Intenta con otra fecha o borra el filtro.</p>
+                    </div>
                 `;
             }
         }
