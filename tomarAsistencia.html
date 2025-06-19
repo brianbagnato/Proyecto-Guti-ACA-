@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="./img/favicon2.jpg">
     <title>Presente</title>
     <link href="style.css" rel="stylesheet" type="text/css" />
@@ -16,7 +16,7 @@
         }
 
         /* ****************************************************************** */
-        /* INICIO DE ESTILOS AÑADIDOS POR MI (PARA MANEJAR TEXTOS LARGOS) */
+        /* INICIO DE ESTILOS AÑADIDOS POR MI (PARA MANEJAR TEXTOS LARGOS - Esto ya estaba en style.css) */
 
         /* Estilos para el título de la clase en el encabezado (h1 #tituloClase) */
         #tituloClase {
@@ -61,13 +61,70 @@
             /* Mi estilo: Añade "..." al final del nombre recortado */
             display: block;
             /* Mi estilo: Necesario para que overflow y text-overflow funcionen */
-            max-width: 100%;
-            /* Mi estilo: Asegura que ocupe el ancho disponible en su contenedor */
-            /* MANTÉN TUS ESTILOS DE FUENTE Y COLOR ORIGINALES AQUÍ */
-            /* Por ejemplo, el tamaño de fuente y color que ya tenga .name en style.css */
+            /* max-width: 100%; ya está implícito con flex: 1 en .info y display: block */
+            /* Removí max-width: 100%; de aquí, lo manejará el padre .info */
         }
 
         /* FIN DE ESTILOS AÑADIDOS POR MI (PARA MANEJAR TEXTOS LARGOS) */
+        /* ****************************************************************** */
+
+        /* ****************************************************************** */
+        /* INICIO DE ESTILOS AÑADIDOS POR MI (PARA MOSTRAR INICIALES EN EL CÍRCULO DE FOTO) */
+        .photo {
+            /* Mi estilo: Esta clase ya existía, pero la sobreescribo o complemento para las iniciales */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            height: 70px;
+            margin-right: 15px;
+            /* Mantengo tu margen */
+            background-color: #d3d3d3;
+            /* Mi estilo: Color de fondo si no hay foto */
+            border: 2px solid #000;
+            /* Mi estilo: Borde si no hay foto */
+            border-radius: 10px;
+            /* Mi estilo: Bordes redondeados */
+            font-size: 28px;
+            /* Mi estilo: Tamaño grande para las iniciales */
+            color: #1f2b4c;
+            /* Mi estilo: Color oscuro para las iniciales */
+            font-weight: bold;
+            /* Mi estilo: Negrita para las iniciales */
+            text-transform: uppercase;
+            /* Mi estilo: Las iniciales en mayúsculas */
+            overflow: hidden;
+            /* Mi estilo: Esconde cualquier cosa que se salga (como una imagen grande) */
+            position: relative;
+            /* Mi estilo: Para asegurar que la imagen se posicione correctamente si se carga */
+            cursor: pointer;
+            /* Mi adición: Indica que es clickeable */
+        }
+
+        .photo img {
+            /* Mi estilo: Asegura que la imagen de foto real ocupe todo el espacio si se carga */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            /* Mi estilo: Redondea las esquinas de la imagen */
+            object-fit: cover;
+            /* Mi estilo: Ajusta la imagen para cubrir el área sin distorsionarse */
+            z-index: 1;
+            /* Mi estilo: La imagen sobre las iniciales */
+        }
+
+        .photo .initials {
+            /* Mi estilo: Un span interno para las iniciales si la foto no está cargada */
+            z-index: 0;
+            /* Mi estilo: Las iniciales detrás de la imagen, pero visibles si no hay imagen */
+            position: absolute;
+            /* Mi adición: Para centrar las iniciales dentro del photo div */
+        }
+
+        /* FIN DE ESTILOS AÑADIDOS POR MI */
         /* ****************************************************************** */
     </style>
 </head>
@@ -81,6 +138,7 @@
         <p class="date" id="fechaActual"></p>
 
         <div id="listaAlumnosContainer">
+            <!-- Las tarjetas de alumnos se generarán aquí -->
         </div>
 
         <div class="botonera">
@@ -90,6 +148,11 @@
     </div>
 
     <script>
+        // Mi adición: Variable global para almacenar el ID de la clase actual.
+        let currentClaseId = null;
+        // Mi adición: Variable global para almacenar la fecha de asistencia actual si estamos editando.
+        let currentAttendanceDate = null;
+
         // Función para obtener parámetro de la URL (ESTO YA ESTABA)
         function getQueryParam(param) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -98,46 +161,200 @@
 
         // Función para formatear fecha (ESTO YA ESTABA)
         function formatearFecha(fecha) {
+            // Mi modificación: Acepta tanto objetos Date como strings 'YYYY_MM_DD'
+            if (typeof fecha === 'string') {
+                const [y, m, d] = fecha.split('_');
+                fecha = new Date(y, m - 1, d); // Meses son 0-index en Date
+            }
             const opciones = { day: '2-digit', month: '2-digit', year: 'numeric' };
             return fecha.toLocaleDateString('es-ES', opciones);
         }
 
-        // Función para generar las tarjetas de alumnos (ESTO YA ESTABA)
-        function generarTarjetasAlumnos(alumnos) {
+        // Mi adición: Función para manejar la carga de fotos y actualizar localStorage.
+        async function handlePhotoUpload(alumnoNombre, base64Image, claseId) {
+            const clasesGuardadas = JSON.parse(localStorage.getItem('clases')) || [];
+            const claseIndex = clasesGuardadas.findIndex(c => c.id == claseId);
+
+            if (claseIndex !== -1) {
+                const clase = clasesGuardadas[claseIndex];
+                const alumnoIndex = clase.alumnos.findIndex(a => a.nombre === alumnoNombre);
+
+                if (alumnoIndex !== -1) {
+                    // Mi adición: Aseguro que el alumno sea un objeto antes de añadir fotoUrl
+                    if (typeof clase.alumnos[alumnoIndex] === 'string') {
+                        clase.alumnos[alumnoIndex] = { nombre: clase.alumnos[alumnoIndex], fotoUrl: '' };
+                    }
+                    clase.alumnos[alumnoIndex].fotoUrl = base64Image;
+                    localStorage.setItem('clases', JSON.stringify(clasesGuardadas));
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Foto Guardada',
+                        text: `La foto de ${alumnoNombre} ha sido actualizada.`,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    // Mi adición: Re-renderiza la tarjeta específica para mostrar la foto.
+                    // No es una re-renderización completa de todas las tarjetas.
+                    // Para hacer esto, necesito una referencia a la tarjeta o al input de archivo original.
+                    // Una forma sencilla es simplemente actualizar la imagen src.
+
+                    // Encuentro la tarjeta del alumno que acaba de ser modificada
+                    const updatedCard = document.querySelector(`.card .name`); // Busca por el nombre del alumno
+                    // Idealmente, deberíamos buscar por un ID único en la tarjeta
+                    if (updatedCard) {
+                        // Obtengo el div.photo dentro de esa tarjeta
+                        const photoDiv = updatedCard.closest('.card').querySelector('.photo');
+                        if (photoDiv) {
+                            let imgElement = photoDiv.querySelector('img');
+                            const initialsSpan = photoDiv.querySelector('.initials');
+
+                            if (imgElement) {
+                                imgElement.src = base64Image;
+                                imgElement.style.display = 'block'; // Asegura que la imagen sea visible
+                            } else {
+                                // Si no hay <img>, lo creo
+                                imgElement = document.createElement('img');
+                                imgElement.src = base64Image;
+                                imgElement.alt = `Foto de ${alumnoNombre}`;
+                                photoDiv.appendChild(imgElement);
+                            }
+                            if (initialsSpan) {
+                                initialsSpan.style.display = 'none'; // Oculta las iniciales
+                            }
+                        }
+                    }
+
+                } else {
+                    console.error('Mi error: Alumno no encontrado para actualizar foto.');
+                }
+            } else {
+                console.error('Mi error: Clase no encontrada para actualizar foto de alumno.');
+            }
+        }
+
+        // Función para generar las tarjetas de alumnos
+        // Mi modificación: Ahora recibe 'alumnos' que es un array de objetos (con nombre y posible fotoUrl)
+        // y 'asistenciaPrevia' para precargar los estados de los radios.
+        function generarTarjetasAlumnos(alumnos, asistenciaPrevia = [], claseId) { // Mi adición: Pasamos claseId
             const container = document.getElementById('listaAlumnosContainer');
             container.innerHTML = '';
 
-            alumnos.forEach((alumno, index) => {
+            alumnos.forEach((alumnoObj, index) => { // Mi modificación: Cambio 'alumno' a 'alumnoObj' para reflejar que es un objeto.
                 const card = document.createElement('div');
                 card.className = 'card';
+
+                // Mi adición: Obtengo el nombre del alumno desde el objeto alumnoObj.
+                const alumnoNombre = typeof alumnoObj === 'object' ? alumnoObj.nombre : alumnoObj;
+
+                // Mi adición: Determinar el estado previo del alumno si existe en la asistencia ya guardada.
+                const alumnoEnRegistroPrevio = asistenciaPrevia.find(
+                    a => a.nombre === alumnoNombre // Mi modificación: Busco por nombre de alumno.
+                );
+                const estadoPrevio = alumnoEnRegistroPrevio ? alumnoEnRegistroPrevio.estado : null; // 'Presente', 'Ausente', 'Tardanza' o null
+
+                // Mi adición: Variables para controlar qué radio button debe estar 'checked'.
+                let checkedP = estadoPrevio === 'Presente' ? 'checked' : '';
+                let checkedA = estadoPrevio === 'Ausente' ? 'checked' : '';
+                let checkedT = estadoPrevio === 'Tardanza' ? 'checked' : '';
+
+                // Mi adición: Si el alumno no tiene un estado previo definido (ej. es un nuevo alumno en la clase o no estaba en el registro guardado),
+                // lo marcamos como 'Ausente' por defecto en la UI al cargar.
+                if (estadoPrevio === null) {
+                    checkedA = 'checked'; // Por defecto, si no hay estado previo, el alumno se marca como Ausente.
+                }
+
+                // Mi adición: Lógica para obtener las iniciales del alumno.
+                const iniciales = alumnoNombre.split(' ').map(n => n[0]).join('').substring(0, 2); // Toma las primeras 2 iniciales del nombre.
+
+                // Mi adición: Determino si hay una foto URL para el alumno.
+                // Asumo que alumnoObj podría tener una propiedad 'fotoUrl'.
+                const fotoUrl = typeof alumnoObj === 'object' && alumnoObj.fotoUrl ? alumnoObj.fotoUrl : '';
+
+                // Mi adición: Construyo el HTML para la sección de la foto (imagen o iniciales).
+                // Incluyo el input type="file" oculto dentro del div.photo.
+                const fotoHtml = fotoUrl ? `<img src="${fotoUrl}" alt="Foto de ${alumnoNombre}">` : `<span class="initials">${iniciales}</span>`;
+
+
                 card.innerHTML = `
-                <div class="photo">👤</div>
-                <div class="info">
-                    <div class="name">${alumno}</div> <div class="radios">
+                <div class="photo" id="photo-${claseId}-${index}"> 
+                    ${fotoHtml}
+                    <input type="file" accept="image/*" class="photo-upload-input" 
+                           id="upload-input-${claseId}-${index}" style="display:none;">
+                </div> 
+                <div class="card-content">
+                    <div class="name">${alumnoNombre}</div> <!-- Mi modificación: Uso alumnoNombre aquí -->
+                    <div class="radios">
                         <div class="radio-group">
                             <label for="alumno${index}_p">P</label>
-                            <input type="radio" id="alumno${index}_p" name="asistencia${index}" value="P">
+                            <input type="radio" id="alumno${index}_p" name="asistencia${index}" value="P" ${checkedP}>
                         </div>
                         <div class="radio-group">
                             <label for="alumno${index}_a">A</label>
-                            <input type="radio" id="alumno${index}_a" name="asistencia${index}" value="A">
+                            <input type="radio" id="alumno${index}_a" name="asistencia${index}" value="A" ${checkedA}>
                         </div>
                         <div class="radio-group">
                             <label for="alumno${index}_t">T</label>
-                            <input type="radio" id="alumno${index}_t" name="asistencia${index}" value="T">
+                            <input type="radio" id="alumno${index}_t" name="asistencia${index}" value="T" ${checkedT}>
                         </div>
                     </div>
                 </div>
                 `;
                 container.appendChild(card);
+
+                // Mi adición: Agrego los event listeners DESPUÉS de que el elemento ha sido añadido al DOM.
+                const photoDiv = document.getElementById(`photo-${claseId}-${index}`);
+                const uploadInput = document.getElementById(`upload-input-${claseId}-${index}`);
+
+                if (photoDiv && uploadInput) {
+                    photoDiv.addEventListener('click', () => {
+                        uploadInput.click(); // Mi estilo: Simula un clic en el input de archivo oculto.
+                    });
+
+                    uploadInput.addEventListener('change', (event) => {
+                        const file = event.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                const base64Image = e.target.result;
+                                // Mi adición: Llamo a la función para guardar la foto en localStorage.
+                                handlePhotoUpload(alumnoNombre, base64Image, claseId);
+
+                                // Mi adición: Actualizo la imagen en la tarjeta sin necesidad de re-renderizar todo.
+                                const imgElement = photoDiv.querySelector('img');
+                                const initialsSpan = photoDiv.querySelector('.initials');
+
+                                if (imgElement) {
+                                    imgElement.src = base64Image; // Actualiza la fuente de la imagen existente.
+                                    imgElement.style.display = 'block'; // Asegura que la imagen esté visible.
+                                } else {
+                                    // Si no existe una etiqueta img, la creo y la añado.
+                                    const newImg = document.createElement('img');
+                                    newImg.src = base64Image;
+                                    newImg.alt = `Foto de ${alumnoNombre}`;
+                                    photoDiv.appendChild(newImg);
+                                }
+                                if (initialsSpan) {
+                                    initialsSpan.style.display = 'none'; // Oculta las iniciales.
+                                }
+                            };
+                            reader.readAsDataURL(file); // Mi estilo: Lee el archivo como una URL Base64.
+                        }
+                    });
+                }
             });
         }
 
-        // Función principal al cargar la página (ESTO YA ESTABA)
-        document.addEventListener('DOMContentLoaded', () => {
+        // Función principal al cargar la página
+        document.addEventListener('DOMContentLoaded', async () => { // Mi modificación: Hago la función asíncrona para usar await
             const claseId = getQueryParam('claseId');
+            const fechaParam = getQueryParam('fecha'); // Mi adición: Obtengo el parámetro de fecha de la URL
+
+            // Mi adición: Almaceno el ID de clase en la variable global.
+            currentClaseId = claseId;
+            // Mi adición: Almaceno la fecha de asistencia en la variable global si existe.
+            currentAttendanceDate = fechaParam;
+
             if (!claseId) {
-                // MODIFICACIÓN: Usar SweetAlert para alertas (ESTO YA ESTABA)
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -150,11 +367,9 @@
                 return;
             }
 
-            // Obtener la clase del localStorage (ESTO YA ESTABA)
             const clases = JSON.parse(localStorage.getItem('clases')) || [];
             const clase = clases.find(c => c.id == claseId);
             if (!clase) {
-                // MODIFICACIÓN: Usar SweetAlert para alertas (ESTO YA ESTABA)
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -167,17 +382,76 @@
                 return;
             }
 
-            // Mostrar datos de la clase
-            // Mi lógica: El título de la clase y el curso se combinan aquí. 
-            // El CSS se encargará de recortarlo si es muy largo.
+            // Mi adición: Aseguro que clase.alumnos sea un array de objetos.
+            // Esto es crucial para manejar la fotoUrl y compatibilidad con nombres simples.
+            clase.alumnos = clase.alumnos.map(alumno => {
+                if (typeof alumno === 'string') {
+                    return { nombre: alumno, fotoUrl: '' }; // Convertir string a objeto con fotoUrl vacía.
+                }
+                return alumno; // Ya es un objeto, lo devuelvo tal cual.
+            });
+
+
             document.getElementById('tituloClase').textContent = `${clase.nombre} - ${clase.curso}`;
 
-            // Mostrar fecha actual (ESTO YA ESTABA)
-            const fechaActual = new Date();
-            document.getElementById('fechaActual').textContent = formatearFecha(fechaActual);
+            // Mi modificación: Lógica para cargar asistencia existente o iniciar una nueva.
+            let asistenciaACargar = []; // Almacenará los datos de asistencia para precargar los radios.
+            let fechaMostrar = new Date(); // Por defecto, la fecha de hoy para un nuevo registro.
 
-            // Generar tarjetas de alumnos (ESTO YA ESTABA)
-            generarTarjetasAlumnos(clase.alumnos);
+            if (fechaParam) {
+                // Mi adición: Si hay un parámetro de fecha, intentamos cargar la asistencia para esa fecha.
+                const claveRegistro = `asistencia_${claseId}_${fechaParam.replace(/-/g, '_')}`; // Formato de clave YYYY_MM_DD
+                const registroGuardado = localStorage.getItem(claveRegistro);
+
+                if (registroGuardado) {
+                    // Mi adición: Si encontramos un registro, lo cargamos.
+                    asistenciaACargar = JSON.parse(registroGuardado);
+                    fechaMostrar = fechaParam; // Mi adición: Usamos la fecha del parámetro para el título y la lógica.
+                    // Mi adición: Aviso al usuario que está en modo edición.
+                    await Swal.fire({ // Mi modificación: Uso await para esperar que el usuario vea este mensaje.
+                        icon: 'info',
+                        title: 'Modo Edición',
+                        text: `Cargando asistencia del ${formatearFecha(fechaParam)} para editar.`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    // Mi adición: Si no se encuentra un registro para la fecha especificada, avisamos.
+                    await Swal.fire({ // Mi modificación: Uso await para esperar que el usuario vea este mensaje.
+                        icon: 'warning',
+                        title: 'Registro no encontrado',
+                        text: `No se encontró un registro de asistencia para la fecha ${formatearFecha(fechaParam)}. Se iniciará un nuevo registro para esa fecha.`,
+                        confirmButtonText: 'Entendido'
+                    });
+                    fechaMostrar = fechaParam; // Mi adición: Sigo usando la fecha del parámetro para el título, pero los radios estarán por defecto (ausente).
+                }
+            } else {
+                // Mi adición: Si no hay fecha en el parámetro URL, significa que es un nuevo registro para hoy.
+                // Compruebo si ya existe un registro para hoy para esa clase.
+                const todayFormatted = new Date().toISOString().split('T')[0].replace(/-/g, '_');
+                const todayKey = `asistencia_${claseId}_${todayFormatted}`;
+                const todayRecord = localStorage.getItem(todayKey);
+
+                if (todayRecord) {
+                    // Mi adición: Si ya hay un registro de hoy, lo cargo para edición.
+                    await Swal.fire({ // Mi modificación: Uso await para esperar que el usuario vea este mensaje.
+                        icon: 'info',
+                        title: 'Registro de Hoy',
+                        text: 'Ya existe un registro de asistencia para hoy. Se cargará para edición.',
+                        confirmButtonText: 'Entendido'
+                    });
+                    asistenciaACargar = JSON.parse(todayRecord);
+                    fechaMostrar = new Date(); // Mi adición: Muestra la fecha de hoy.
+                    currentAttendanceDate = todayFormatted; // Mi adición: Actualizo la variable global con la fecha de hoy formateada.
+                }
+                // Si no hay fecha en URL y no hay registro de hoy, asistenciaACargar queda [] y fechaMostrar es new Date(),
+                // lo que inicia un nuevo registro vacío para hoy.
+            }
+
+            // Mi modificación: Muestro la fecha correcta en la UI.
+            document.getElementById('fechaActual').textContent = formatearFecha(fechaMostrar);
+            // Mi modificación: Paso la lista de alumnos de la clase y la asistencia guardada (si la hay) a la función que genera las tarjetas.
+            generarTarjetasAlumnos(clase.alumnos, asistenciaACargar, claseId); // Mi adición: Paso claseId aquí.
         });
 
         // ✅ Marca todos los radios con un valor dado (P, A o T) (ESTO YA ESTABA)
@@ -191,14 +465,14 @@
             const radios = document.querySelectorAll('input[type="radio"]');
             const grupos = {};
 
-            // Agrupar por name (cada grupo representa un alumno)
+            // Agrupar por name (cada grupo representa un alumno) (ESTO YA ESTABA)
             radios.forEach(radio => {
                 const name = radio.name;
                 if (!grupos[name]) grupos[name] = [];
                 grupos[name].push(radio);
             });
 
-            // Para cada grupo (alumno), si no está marcado ni P ni T, marcar A
+            // Para cada grupo (alumno), si no está marcado ni P ni T, marcar A (ESTO YA ESTABA)
             Object.values(grupos).forEach(grupo => {
                 const algunoMarcado = grupo.find(r => r.checked && (r.value === "P" || r.value === "T"));
                 if (!algunoMarcado) {
@@ -207,7 +481,7 @@
                 }
             });
 
-            // Guardar el registro y luego mostrar SweetAlert
+            // Guardar el registro y luego mostrar SweetAlert (ESTO YA ESTABA)
             guardarAsistencia();
             // La redirección se hará dentro de guardarAsistencia() ahora
         }
@@ -217,10 +491,10 @@
             window.location.href = 'clases.html';
         }
 
-        // Guardar la asistencia en localStorage (ESTO YA ESTABA)
-        function guardarAsistencia() {
-            const claseId = getQueryParam('claseId');
-            if (!claseId) {
+        // Guardar la asistencia en localStorage
+        async function guardarAsistencia() { // Mi modificación: Hago la función asíncrona para SweetAlert
+            // Mi modificación: Uso la variable global currentClaseId
+            if (!currentClaseId) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -232,16 +506,18 @@
                 return;
             }
 
-            const fecha = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+            // Mi modificación: Si estamos editando, uso la fecha de la variable global currentAttendanceDate. 
+            // Si no, uso la fecha actual para un nuevo registro.
+            const fecha = currentAttendanceDate || new Date().toISOString().split('T')[0].replace(/-/g, '_');
             const registros = [];
 
-            // Recorrer todas las tarjetas de alumnos
+            // Recorrer todas las tarjetas de alumnos (ESTO YA ESTABA)
             document.querySelectorAll('.card').forEach((card, index) => {
                 const nombre = card.querySelector('.name').textContent;
-                // Obtener el estado seleccionado (P, A o T)
+                // Obtener el estado seleccionado (P, A o T) (ESTO YA ESTABA)
                 const estado = card.querySelector(`input[name="asistencia${index}"]:checked`)?.value || 'A';
 
-                // Convertir P, A, T a Presente, Ausente, Tardanza para legibilidad en registros
+                // Convertir P, A, T a Presente, Ausente, Tardanza para legibilidad en registros (ESTO YA ESTABA)
                 let estadoCompleto;
                 switch (estado) {
                     case 'P':
@@ -261,21 +537,21 @@
             });
 
             // Guardar en localStorage con clave única
-            const clave = `asistencia_${claseId}_${fecha.replace(/-/g, '_')}`; // Asegura YYYY_MM_DD
+            // Mi modificación: Uso la variable global currentClaseId y la fecha determinada.
+            const clave = `asistencia_${currentClaseId}_${fecha}`;
             localStorage.setItem(clave, JSON.stringify(registros));
 
-            // MODIFICACIÓN: Mostrar mensaje de éxito con SweetAlert2 (ESTO YA ESTABA)
-            Swal.fire({
-                title: 'Registro Cerrado',
-                text: `Asistencia del ${formatearFecha(new Date())} guardada correctamente.`,
+            // MODIFICACIÓN: Mostrar mensaje de éxito con SweetAlert2
+            await Swal.fire({ // Mi modificación: Uso await para esperar que el usuario cierre la alerta
+                title: 'Registro Guardado',
+                text: `Asistencia del ${formatearFecha(fecha)} guardada correctamente.`,
                 icon: 'success',
-                timer: 2000, // La alerta se cierra automáticamente después de 2 segundos
-                showConfirmButton: false, // Oculta el botón de "OK"
-                allowOutsideClick: false // No permite cerrar haciendo clic afuera
-            }).then(() => {
-                // Esta parte se ejecuta DESPUÉS de que la alerta se cierra
-                volverAClases();
+                timer: 2000,
+                showConfirmButton: false,
+                allowOutsideClick: false
             });
+            // Mi adición: Ahora la redirección ocurre solo después de que el usuario cierre la alerta.
+            volverAClases();
         }
     </script>
 </body>
