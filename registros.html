@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="style.css">
     <!-- Mi adición: Incluyo jsPDF para la generación de PDFs (esto ya estaba) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Corrección: Se añade la librería SweetAlert2. Esto resuelve el error "Swall is not defined". -->
+    <!-- Se usa 'Swal' en el código, no 'Swall'. La inclusión de la librería es crucial. -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .app-header {
             display: flex;
@@ -445,6 +448,11 @@
         let currentRecordClaseId = null;
         let currentRecordFecha = null;
 
+        // Corrección: Se declara `claseIdGlobal` aquí para que sea accesible en todo el script.
+        // Anteriormente, `claseIdSeleccionada` se obtenía localmente en `cargarRegistros` y `filtrarRegistrosPorFecha`,
+        // causando un ReferenceError cuando se intentaba acceder a ella fuera de esas funciones.
+        let claseIdGlobal = null;
+
         // Datos de ejemplo para demostración (ESTO YA ESTABA)
         const demoData = {
             clases: [
@@ -502,10 +510,10 @@
             return params.get(nombre);
         }
 
-        // Cargar registros desde localStorage (ESTO YA ESTABA)
-        function cargarRegistros() {
+        // Corrección: Función unificada para renderizar registros, ahora acepta filtros.
+        // Esto elimina la duplicación de código entre `cargarRegistros` y `filtrarRegistrosPorFecha`.
+        function renderizarRegistros(claseIdFiltro = null, fechaFiltro = null) {
             const clases = JSON.parse(localStorage.getItem('clases')) || [];
-            const claseIdSeleccionada = obtenerParametro('claseId');
             const contenedor = document.querySelector('.registros-container');
             contenedor.innerHTML = '';
 
@@ -532,7 +540,13 @@
                 const claseId = partes[1];
                 const fecha = partes.slice(2).join('_');
 
-                if (claseIdSeleccionada && claseId !== claseIdSeleccionada) return;
+                // Corrección: Aplica los filtros de claseId y fecha si están presentes.
+                if (claseIdFiltro && claseId !== claseIdFiltro) {
+                    return;
+                }
+                if (fechaFiltro && fecha !== fechaFiltro) {
+                    return;
+                }
 
                 const clase = clases.find(c => c.id == claseId);
                 if (clase) {
@@ -559,12 +573,22 @@
                 }
             });
 
-
             if (!registrosEncontrados) {
+                // Corrección: Mensaje de "no hay registros" adaptable al filtro.
+                let mensaje = 'No hay registros de asistencia.';
+                if (fechaFiltro) {
+                    mensaje += ' para la fecha seleccionada.';
+                } else if (claseIdFiltro) {
+                    // Si solo hay filtro de claseId y no se encuentra
+                    const claseFiltrada = clases.find(c => c.id == claseIdFiltro);
+                    if (claseFiltrada) {
+                        mensaje += ` para la clase "${claseFiltrada.nombre}".`;
+                    }
+                }
                 contenedor.innerHTML = `
                 <div class="empty-state">
-                    <h4>No hay registros de asistencia</h4>
-                    <p>Cuando tomes asistencia, aparecerán aquí</p>
+                    <h4>${mensaje}</h4>
+                    <p>Cuando tomes asistencia, aparecerán aquí.</p>
                 </div>
                 `;
             }
@@ -575,14 +599,13 @@
             window.location.href = `tomarAsistencia.html?claseId=${claseId}&fecha=${fecha}`;
         }
 
-
         // Mostrar detalles en el modal (ESTO YA ESTABA)
         function mostrarDetalles(clave) {
             // Mi adición: Almaceno el ID de clase y la fecha del registro actualmente abierto en el modal.
             // Esto me permitirá acceder a ellos desde la función editarAsistenciaRegistro.
             const partesClave = clave.split('_');
             currentRecordClaseId = partesClave[1];
-            currentRecordFecha = partesClave.slice(2).join('_'); // Formatoレンダー_MM_DD
+            currentRecordFecha = partesClave.slice(2).join('_'); // Formato AAAA_MM_DD
 
             const datos = JSON.parse(localStorage.getItem(clave));
             const lista = document.getElementById('lista-detalles');
@@ -644,7 +667,12 @@
                 cargarDatosDemo();
             }
 
-            cargarRegistros();
+            // Corrección: Se inicializa claseIdGlobal aquí una vez al cargar el DOM.
+            // Esto asegura que la variable esté definida para cualquier uso.
+            claseIdGlobal = obtenerParametro('claseId');
+
+            // Corrección: Se llama a la función unificada para renderizar los registros.
+            renderizarRegistros(claseIdGlobal);
 
             const modal = document.getElementById('modal');
             modal.addEventListener('click', (e) => {
@@ -664,79 +692,14 @@
                 }
             });
 
-
             const inputFecha = document.getElementById('fecha');
             inputFecha.addEventListener('change', () => {
                 const fechaFiltro = inputFecha.value.replace(/-/g, '_');
-                filtrarRegistrosPorFecha(fechaFiltro);
+                // Corrección: Llama a la función unificada con el filtro de fecha.
+                renderizarRegistros(claseIdGlobal, fechaFiltro);
             });
         });
 
-        // NUEVA FUNCIÓN: Filtrar registros por fecha (ESTO YA ESTABA)
-        function filtrarRegistrosPorFecha(fecha) {
-            const clases = JSON.parse(localStorage.getItem('clases')) || [];
-            const contenedor = document.querySelector('.registros-container');
-            contenedor.innerHTML = '';
-
-            let registrosEncontrados = false;
-            let todasLasAsistencias = [];
-
-            // Recorrer localStorage para encontrar todas las asistencias (ESTO YA ESTABA)
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('asistencia_')) {
-                    todasLasAsistencias.push(key);
-                }
-            }
-
-            // Ordenar las asistencias por fecha (las más recientes primero) (ESTO YA ESTABA)
-            todasLasAsistencias.sort((a, b) => {
-                const fechaA = a.split('_').slice(2).join('');
-                const fechaB = b.split('_').slice(2).join('');
-                return fechaB.localeCompare(fechaA);
-            });
-
-            todasLasAsistencias.forEach(key => {
-                const partes = key.split('_');
-                const claseId = partes[1];
-                const fecha = partes.slice(2).join('_');
-
-                if (claseIdSeleccionada && claseId !== claseIdSeleccionada) return;
-
-                const clase = clases.find(c => c.id == claseId);
-                if (clase) {
-                    registrosEncontrados = true;
-                    const tarjeta = document.createElement('div');
-                    tarjeta.className = 'tarjeta-registro';
-                    tarjeta.innerHTML = `
-                            <p>Clase: <strong>${clase.nombre}</strong><br>Curso: ${clase.curso}</p>
-                            <span>${formatearFecha(fecha)}</span>
-                            <!-- Mi adición: Botón de Editar Asistencia en la tarjeta de registro para filtros -->
-                            <button class="btn-editar-registro" 
-                                    onclick="editarAsistenciaDesdeRegistro('${claseId}', '${fecha}');">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                Editar
-                            </button>
-                        `;
-                    tarjeta.addEventListener('click', (event) => {
-                        // Mi modificación: Solo abre el modal si no se hizo clic en el botón de editar.
-                        if (!event.target.closest('.btn-editar-registro')) {
-                            mostrarDetalles(key);
-                        }
-                    });
-                    contenedor.appendChild(tarjeta);
-                }
-            });
-
-            if (!registrosEncontrados) {
-                contenedor.innerHTML = `
-                    <div class="empty-state">
-                        <h4>No hay registros de asistencia para la fecha seleccionada.</h4>
-                        <p>Intenta con otra fecha o borra el filtro.</p>
-                    </div>
-                `;
-            }
-        }
         // Si necesitas la función volverAClases, defínela correctamente: (ESTO YA ESTABA)
         function volverAClases() {
             window.location.href = "clases.html";
@@ -775,6 +738,7 @@
             });
 
             if (alumnos.length === 0) {
+                // Corrección: Se usa 'Swal' en lugar de 'Swall' para la librería SweetAlert2.
                 Swal.fire({
                     icon: 'info',
                     title: 'No hay datos',
@@ -883,6 +847,7 @@
                 console.log('Mi log: Descarga iniciada con éxito.');
 
                 // Mi adición: Muestra SweetAlert de éxito de descarga *inmediatamente después de intentar la descarga*
+                // Corrección: Se usa 'Swal' en lugar de 'Swall'.
                 Swal.fire({
                     icon: 'success',
                     title: 'Descarga completa',
@@ -893,6 +858,7 @@
 
             } else {
                 console.error('Mi error: fileBlob es null o undefined, no se puede descargar ni compartir.');
+                // Corrección: Se usa 'Swal' en lugar de 'Swall'.
                 Swal.fire({
                     icon: 'error',
                     title: 'Error de generación',
@@ -915,6 +881,7 @@
                             title: tituloModal,
                             text: `Registro de asistencia: ${tituloModal} (${formato.toUpperCase()})`
                         });
+                        // Corrección: Se usa 'Swal' en lugar de 'Swall'.
                         Swal.fire({
                             icon: 'success',
                             title: '¡Compartido!',
@@ -925,6 +892,7 @@
                         console.log('Mi log: Compartir dialog abierto.');
                     } catch (error) {
                         if (error.name !== 'AbortError') {
+                            // Corrección: Se usa 'Swal' en lugar de 'Swall'.
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error al compartir',
@@ -938,6 +906,7 @@
                     }
                 } else {
                     console.warn('Mi advertencia: El navegador puede compartir, pero no este tipo de archivo:', fileType);
+                    // Corrección: Se usa 'Swal' en lugar de 'Swall'.
                     Swal.fire({
                         icon: 'info',
                         title: 'Compartir archivo no soportado',
@@ -947,6 +916,7 @@
                 }
             } else {
                 console.warn('Mi advertencia: navigator.share o navigator.canShare no soportado.');
+                // Corrección: Se usa 'Swal' en lugar de 'Swall'.
                 Swal.fire({
                     icon: 'info',
                     title: 'Compartir no soportado',
@@ -974,6 +944,7 @@
                         title: tituloModal,
                         text: textoCompartir,
                     });
+                    // Corrección: Se usa 'Swal' en lugar de 'Swall'.
                     Swal.fire({
                         icon: 'success',
                         title: '¡Compartido!',
@@ -983,6 +954,7 @@
                     });
                 } catch (error) {
                     if (error.name !== 'AbortError') {
+                        // Corrección: Se usa 'Swal' en lugar de 'Swall'.
                         Swal.fire({
                             icon: 'error',
                             title: 'Error al compartir',
@@ -993,6 +965,7 @@
                     }
                 }
             } else {
+                // Corrección: Se usa 'Swal' en lugar de 'Swall'.
                 Swal.fire({
                     icon: 'info',
                     title: 'Compartir no soportado',
